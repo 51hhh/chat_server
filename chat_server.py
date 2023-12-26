@@ -99,3 +99,11 @@ class ChatServer(BaseHTTPRequestHandler):
 
         # 显示返回值
         print(f"Sent error response: {error_message}")
+def run(server_class=HTTPServer, handler_class=ChatServer, port=8000):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    print(f'Starting chat server on port {port}...')
+    httpd.serve_forever()
+
+if __name__ == "__main__":
+    run()
