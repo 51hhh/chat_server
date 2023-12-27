@@ -7,20 +7,6 @@ import json
 chat_history = []
 
 class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        path = self.path  #获取请求的完整路径。
-        user = path.split('?')[1]  #将路径通过 ? 分割，并获取第二部分（即 URL 中的查询字符串）
-        #data = getdata(user)  #调用 getdata 函数获取数据。
-        data = {
-            "total": "1",
-            "contributions": "datalistsplit"
-        }
-        self.send_response(200)  #发送响应状态码。
-        self.send_header('Access-Control-Allow-Origin', '*')  #设置响应头以允许跨域请求。星号 * 表示接受任何域的请求。
-        self.send_header('Content-type', 'application/json')  #设置响应头部为 json 格式。
-        self.end_headers()  #结束 HTTP 头部的发送。
-        self.wfile.write(json.dumps(data).encode('utf-8'))  #将 data 转换为 JSON 字符串，并以 UTF-8 编码方式写入响应。
-        return
 
     """
     该函数处理GET请求。
@@ -33,21 +19,21 @@ class handler(BaseHTTPRequestHandler):
     返回:
         无
     """
-    # def do_GET(self):
-    #     # 记录请求信息
-    #     print(f"Received GET request for {self.path}")
+    def do_GET(self):
+        # 记录请求信息
+        print(f"Received GET request for {self.path}")
 
-    #     # 发送响应状态码
-    #     self.send_response(200)
-    #     # 设置响应头部为json格式
-    #     self.send_header('Content-type', 'application/json; charset=utf-8')
-    #     self.end_headers()
-    #     # 发送聊天历史的json字符串
-    #     chat_history_json = json.dumps(chat_history)
-    #     self.wfile.write(chat_history_json.encode('utf-8'))
+        # 发送响应状态码
+        self.send_response(200)
+        # 设置响应头部为json格式
+        self.send_header('Content-type', 'application/json; charset=utf-8')
+        self.end_headers()
+        # 发送聊天历史的json字符串
+        chat_history_json = json.dumps(chat_history)
+        self.wfile.write(chat_history_json.encode('utf-8'))
 
-    #     # 显示返回值
-    #     print(f"  Sent response with chat history.\n")
+        # 显示返回值
+        print(f"  Sent response with chat history.\n")
 
     """
     处理POST请求。
@@ -115,7 +101,7 @@ class handler(BaseHTTPRequestHandler):
         print(f"Sent error response: {error_message}")
 
 
-def run(server_class=HTTPServer, handler_class=ChatServer, port=8000):
+def run(server_class=HTTPServer, handler_class=handler, port=8000):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     print(f'Starting chat server on port {port}...')
@@ -123,3 +109,4 @@ def run(server_class=HTTPServer, handler_class=ChatServer, port=8000):
 
 if __name__ == "__main__":
     run()
+
