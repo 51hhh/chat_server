@@ -106,6 +106,3 @@ def run(server_class=HTTPServer, handler_class=ChatServer, port=8000):
     httpd = server_class(server_address, handler_class)
     print(f'Starting chat server on port {port}...')
     httpd.serve_forever()
-
-if __name__ == "__main__":
-    run()
