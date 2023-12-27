@@ -26,14 +26,12 @@ class handler(BaseHTTPRequestHandler):
         # 发送响应状态码
         self.send_response(200)
         # 设置响应头部为json格式
-        self.send_header('Content-type', 'application/json; charset=utf-8')
-        self.end_headers()
+        self.send_header('Access-Control-Allow-Origin', '*')#设置允许跨域
+        self.send_header('Content-type', 'application/json')#设置响应格式
+        self.end_headers()#结束响应
         # 发送聊天历史的json字符串
-        chat_history_json = json.dumps(chat_history)
-        self.wfile.write(chat_history_json.encode('utf-8'))
+        self.wfile.write(json.dumps(chat_history).encode('utf-8'))
 
-        # 显示返回值
-        print(f"  Sent response with chat history.\n")
 
     """
     处理POST请求。
@@ -75,18 +73,19 @@ class handler(BaseHTTPRequestHandler):
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # 将用户 ID、消息和时间存储到聊天历史列表中
         chat_history.append({"userId": user_id, "message": message, "timestamp": now})
+        
+        # 发送响应
+        data = {
+            "user_id": user_id,
+            "message": message,
+            "time": now
+        }
 
-        # 发送响应状态码
-        self.send_response(200)
-        # 设置响应头部为纯文本格式
-        self.send_header('Content-type', 'text/plain; charset=utf-8')
-        self.end_headers()
-        # 发送确认信息
-        response_message = f"Message from user {user_id} received at {now}"
-        self.wfile.write(response_message.encode('utf-8'))
-
-        # 显示返回值
-        print(f"Sent response: {response_message}")
+        self.send_response(200)# 发送响应状态码
+        self.send_header('Access-Control-Allow-Origin', '*')    #设置响应头以允许跨域请求。星号 * 表示接受任何域的请求。
+        self.send_header('Content-type', 'application/json')    # 设置响应头部为json格式
+        self.end_headers()# 结束 HTTP 头部的发送。
+        self.wfile.write(json.dumps(data).encode('utf-8'))  #转换为 JSON 字符串，并以 UTF-8 编码方式写入响应。
 
     def _send_error_response(self, error_message, status_code=400):
         # 发送错误响应状态码
