@@ -11,7 +11,7 @@ class ChatServer(BaseHTTPRequestHandler):
         path = self.path  #获取请求的完整路径。
         user = path.split('?')[1]  #将路径通过 ? 分割，并获取第二部分（即 URL 中的查询字符串）
         #data = getdata(user)  #调用 getdata 函数获取数据。
-        returndata = {
+        data = {
             "total": "1",
             "contributions": "datalistsplit"
         }
