@@ -52,3 +52,12 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data).encode('utf-8'))
         return
+
+if __name__ == "__main__":
+    from http.server import HTTPServer
+
+    PORT = 8000
+
+    httpd = HTTPServer(('localhost', PORT), handler)
+    print(f"Server started at http://localhost:{PORT}")
+    httpd.serve_forever()
