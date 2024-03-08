@@ -34,6 +34,10 @@ github或者google登录，创建一个数据库，找到连接即可。
 
 部署后为根目录的/api下，即若你在vercel自定义域名为https://chatserve.polar-bear.eu.org，则api为https://chatserve.polar-bear.eu.org/api/
 
+api文档
+
+https://apifox.com/apidoc/shared-135607bc-4296-40dd-9835-4129ab657c38
+
 --------------------------------------------------------
 
 更新：修复部分问题，更改储存用户信息为数据库，添加部分注释，更改响应结构，完善部分功能。 2024.3.8：21：33
