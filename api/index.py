@@ -4,45 +4,33 @@ from datetime import datetime
 import json
 from urllib.parse import urlparse, parse_qs
 import secrets
-# 存储聊天信息的列表
-chat_history = []
-userID_list = []
-usertoken_list = []
+import supabase
+
+
+# 数据库部分
+
+import os
+from supabase import create_client, Client
+
+# 从环境变量获取这些值
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+
+# url = '' # 此处替换成你的Supabase项目URL
+# key = ''
+supabase: Client = create_client(url, key)
+
+
 
 class handler(BaseHTTPRequestHandler):
-
-    """
-    该函数处理GET请求。
-
-    它记录请求信息，并发送一个带有聊天历史的JSON格式响应。
-
-    参数:
-        self: 类的实例。
-
-    返回:
-        无
-    """
-    def do_GET(self):
-        # 记录请求信息
-        print(f"Received GET request for {self.path}")
-
-        # 发送响应状态码
-        self.send_response(200)
-        # 设置响应头部为json格式
-        self.send_header('Access-Control-Allow-Origin', '*')#设置允许跨域
-        self.send_header('Content-type', 'application/json')#设置响应格式
-        self.end_headers()#结束响应
-        # 发送聊天历史的json字符串
-        self.wfile.write(json.dumps(chat_history).encode('utf-8'))
-
 
     """
     处理POST请求。
 
     记录请求信息。
     获取并解析请求数据。
-    检查请求数据中是否包含'userId'和'message'。
-    从请求数据中提取'userId'和'message'。
+    检查请求数据中是否包含'userid'和'message'。
+    从请求数据中提取'userid'和'message'。
     将用户ID、消息和时间戳存储到聊天历史记录中。
     发送状态码为200的响应，并设置响应头部为纯文本格式。
     向响应正文写入确认消息。
@@ -58,17 +46,8 @@ class handler(BaseHTTPRequestHandler):
             sign_in(self,query_params)
         elif type_value == "message":
             message(self,query_params)
-
-
-
-
-
-
-
-
-
-
-
+        elif type_value == "get_message":
+            get_message(self,query_params)
 
 
 
@@ -106,7 +85,7 @@ class handler(BaseHTTPRequestHandler):
     None
 
 异常处理:
-    无 userId
+    无 userid
     无 password
     用户已存在
 """
@@ -114,59 +93,43 @@ class handler(BaseHTTPRequestHandler):
 
 def sign_up(self,query_params): 
 
-    user_id_value = query_params.get('userId', [None])[0] 
+    user_id_value = query_params.get('userid', [None])[0] 
     password_value = query_params.get('password', [None])[0]
 
 
-    # 读取此userId的登陆状态
-    users_a_info= [item for item in userID_list if item["userId"] == user_id_value]
-
-
-    if user_id_value is None:
-        self.send_response(201)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        data = {
-            "user_id": "",
-            "type": "sign_up",
-            "message": "无 userId"
-        }
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-        print(f"注册失败,无 userId")
-        return
-    elif password_value is None:
-        self.send_response(201)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        data = {
-            "user_id": user_id_value,
-            "type": "sign_up",
-            "message": "无 password"
-        }
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-        print(f"注册失败，无 password")
+    # 使用Supabase数据库查询是否已有该userid
+    try:
+        data_exists = supabase.table("users").select("userid").eq("userid", user_id_value).execute()
+    except:
+        self._send_error_response("网络错误" ,status_code=404)
         return
     
 
+    if user_id_value is None:
+        self._send_error_response("无 userid" ,status_code=400)
+        return
+    elif password_value is None:
+        self._send_error_response("无 possword" ,status_code=400)
+        return
+    # 上为检查 userid和password 完整性
+
+
     # 判断已有userid的列表是否为空
     # 就是是否有重复的id
-    elif users_a_info:
-        self.send_response(201)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        data = {
-            "user_id": user_id_value,
-            "type": "sign_up",
-            "message": "用户已存在"
-        }
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-        print(f"注册失败，用户名为 {user_id_value} 的用户已存在")
-
+    elif data_exists.data:
+        self._send_error_response(f"{user_id_value}已存在" ,status_code=201)
 
     else:
+        new_user = {"userid": user_id_value, "password": password_value}
+        # 在数据库中创建新用户
+        try:
+            supabase.table("users").insert(new_user).execute()
+        
+        except:
+            self._send_error_response("网络错误" ,status_code=404)
+            return
+        
+        # 用户成功创建，成功响应代码...
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Content-type', 'application/json')
@@ -177,10 +140,8 @@ def sign_up(self,query_params):
             "message": "注册成功"
         }
         self.wfile.write(json.dumps(data).encode('utf-8'))
-        print(f"注册成功")
 
 
-        userID_list.append({"userId": user_id_value, "password": password_value})
 
 
 
@@ -195,108 +156,76 @@ def sign_up(self,query_params):
     None
 """
 
-def sign_in(self,query_params):
-    # 获取post传入的 userId 和 password 的值
-    user_id_value = query_params.get('userId', [None])[0] 
+
+
+# 登录函数
+def sign_in(self,query_params): 
+    user_id_value = query_params.get('userid', [None])[0] 
     password_value = query_params.get('password', [None])[0]
-    
+
     if user_id_value is None:
-        self.send_response(201)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        data = {
-            "user_id": "",
-            "type": "sign_in",
-            "message": "无 userId"
-        }
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-        print(f"登录失败，无 userId")
+        self._send_error_response("无 userid" ,status_code=400)
         return
-    else:
-        users_a_info = [item for item in userID_list if item["userId"] == user_id_value]
-        if users_a_info:
-            for user_info in users_a_info:
-                print(f"找到了用户 {user_id_value}，密码是:", user_info["password"])
+    
+    # 查询用户
+    try:
+        user_info = supabase.table("users").select("*").eq("userid", user_id_value).execute()
+    except:
+        self._send_error_response("网络错误" ,status_code=404)
+        return
+    
+    if user_info.data:
+        user_info_data = user_info.data[0]
+        # 对比密码
+        if user_info_data["password"] == password_value:
+            # 查询 token
+
+            token = user_info.data[0]["token"]
+            if token != None:
+                # 用户已经登录的响应......
+                # 发送带有 token 的登录成功响应......
+                self.send_response(200)
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+
                 
-                if user_info["password"] == password_value:
-                    # 密码通过
-
-
-                    # 读取此userId的登陆状态
-                    users_a_token= [item for item in usertoken_list if item["userId"] == user_id_value]
-                    # 判断返回的列表是否为空
-                    if users_a_token:
-                        for users_token in users_a_token:
-                            print(f"找到了用户 {user_id_value}，token是:")
-                            #user是否已经有token
-                            print(f"用户 {user_id_value} 已登录，无需重复登录")
-
-                            token = users_token["token"]
-
-                            self.send_response(201)
-                            self.send_header('Access-Control-Allow-Origin', '*')
-                            self.send_header('Content-type', 'application/json')
-                            self.end_headers()
-                            data = {
-                                "user_id": user_id_value,
-                                "type": "sign_in",
-                                "message": "已登录，无需重复登录",
-                                "token": token
-                            }
-                            self.wfile.write(json.dumps(data).encode('utf-8'))
-                            return
-                    else:
-
-                        self.send_response(200)
-                        self.send_header('Access-Control-Allow-Origin', '*')
-                        self.send_header('Content-type', 'application/json')
-                        self.end_headers()
-
-                        token = secrets.token_hex(16)
-                        usertoken_list.append({"userId": user_id_value, "token": token})
-
-                        data = {
-                            "user_id": user_id_value,
-                            "type": "sign_in",
-                            "message": "登录成功",
-                            "token": token
-                        }
-                        self.wfile.write(json.dumps(data).encode('utf-8'))
-                        print(f"登录成功")
-                        return
-                    
-
-
-                else:
-                    self.send_response(201)
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    data = {
-                        "user_id": user_id_value,
-                        "type": "sign_in",
-                        "message": "密码错误"
-                    }
-                    self.wfile.write(json.dumps(data).encode('utf-8'))
-                    print(f"登录失败，密码错误")
+                data = {
+                    "user_id": user_id_value,
+                    "type": "sign_in",
+                    "message": "登录成功",
+                    "token": token
+                }
+                self.wfile.write(json.dumps(data).encode('utf-8'))
+            else:
+                # 生成token
+                token = secrets.token_hex(16)
+                
+                try:
+                    supabase.table("users").update({"token": token}).eq("userid", user_id_value).execute()
+                except:
+                    self._send_error_response("网络错误" ,status_code=404)
                     return
 
+                # 发送带有 token 的登录成功响应......
+                self.send_response(200)
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
 
+                
+                data = {
+                    "user_id": user_id_value,
+                    "type": "sign_in",
+                    "message": "登录成功,已成功生成token",
+                    "token": token
+                }
+                self.wfile.write(json.dumps(data).encode('utf-8'))
         else:
-            print("没有找到用户 ", user_id_value)
-            self.send_response(201)
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            data = {
-                "user_id": "",
-                "type": "sign_in",
-                "message": "用户不存在"
-            }
-            self.wfile.write(json.dumps(data).encode('utf-8'))
-            print(f"登录失败，用户不存在")
-            return
+            self._send_error_response("密码错误" ,status_code=201)
+    else:
+        self._send_error_response(f"没有找到{user_id_value}的用户" ,status_code=201)
+
 
 
 def message(self,query_params):
@@ -309,65 +238,98 @@ def message(self,query_params):
     # 解析JSON数据
     post_data_json = json.loads(post_data.decode('utf-8'))
 
-    # 检查是否有 userId
-    if 'userId' not in post_data_json:
-        self._send_error_response("无 userId" ,status_code=201)
+    # 检查是否有 userid
+    if 'userid' not in post_data_json:
+        self._send_error_response("无 userid" ,status_code=400)
         return
 
     # 检查是否有 message
     if 'message' not in post_data_json:
-        self._send_error_response("无 message", status_code=201)
+        self._send_error_response("无 message", status_code=400)
         return
     
     if 'token' not in post_data_json:
-        self._send_error_response("无 token", status_code=201)
+        self._send_error_response("无 token", status_code=400)
         return
     
-    user_id = post_data_json['userId']
-    user_token = post_data_json['token']
-    message = post_data_json['message']
 
 
-    users_a_info= [item for item in usertoken_list if item["userId"] == user_id]
-    if users_a_info:
-        for user_info in users_a_info:
-            print(f"找到了用户 {user_id}，token是:", user_info["token"])
-            if user_info["token"] == user_token:
-                # 获取当前时间并格式化
-                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                # 将用户 ID、消息和时间存储到聊天历史列表中
-                chat_history.append({"userId": user_id, "message": message, "timestamp": now})
-                
-                # 发送响应
-                data = {
-                    "user_id": user_id,
-                    "message": f"{message}发送成功",
-                    "time": now
-                }
+    # 获取当前时间并格式化
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # 将用户 ID、消息和时间戳存储到数据库中
+    message_data = {
+        "userid": post_data_json['userid'],
+        "message": post_data_json['message'],
+        "timestamp": now
+    }
+    
+    try:
+        supabase.table("messages").insert(message_data).execute()
+    except:
+        self._send_error_response("网络错误" ,status_code=404)
+        return
 
-                self.send_response(200)# 发送响应状态码
-                self.send_header('Access-Control-Allow-Origin', '*')    #设置响应头以允许跨域请求。星号 * 表示接受任何域的请求。
-                self.send_header('Content-type', 'application/json')    # 设置响应头部为json格式
-                self.end_headers()# 结束 HTTP 头部的发送。
-                self.wfile.write(json.dumps(data).encode('utf-8'))  #转换为 JSON 字符串，并以 UTF-8 编码方式写入响应。
-                print(f"发送成功")
+    # 如果保存成功，发送成功响应
+    self.send_response(200)
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    response_data = {
+        "message": "消息发送成功",
+        "timestamp": now
+    }
+    self.wfile.write(json.dumps(response_data).encode('utf-8'))
+
+
+
+
+
+
+def get_message(self,query_params):
+    user_id_value = query_params.get('userid', [None])[0]
+    token = query_params.get('token', [None])[0]
+
+    if user_id_value is None:
+        self._send_error_response("无 userid" ,status_code=400)
+        return
+    elif token is None:
+        self._send_error_response("无 possword" ,status_code=400)
+        return
+
+    try:
+        user_info = supabase.table("users").select("*").eq("userid", user_id_value).execute()
+    except:
+        self._send_error_response("网络错误" ,status_code=404)
+        return
+
+
+    if user_info.data:
+        user_info_data = user_info.data[0]
+        if token == user_info_data["token"]:
+        
+            # 发送响应状态码
+            self.send_response(200)
+            # 设置响应头部为json格式
+            self.send_header('Access-Control-Allow-Origin', '*')#设置允许跨域
+            self.send_header('Content-type', 'application/json')#设置响应格式
+            self.end_headers()#结束响应
+
+            # 发送聊天历史的json字符串
+            try:
+                chat_history_response = supabase.table("messages").select("*").execute()
+            except:
+                self._send_error_response("网络错误" ,status_code=404)
                 return
-            else:
-                data ={
-                    "user_id": user_id,
-                    "message": "token与用户名不匹配，请清除token重新登录"
-                }
-                self.send_response(201)
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(data).encode('utf-8'))
-                print(f"token与用户名不匹配，请清除token重新登录")
-                return
+        
+            chat_history_data = chat_history_response.data
+            self.wfile.write(json.dumps(chat_history_data).encode('utf-8'))
+        else:
+            self._send_error_response("token错误" ,status_code=201)
+    else:
+        self._send_error_response(f"没有找到{user_id_value}的用户" ,status_code=201)
 
 
-
-
+       
 
 
 
@@ -382,4 +344,3 @@ def run(server_class=HTTPServer, handler_class=handler, port=8000):
 
 if __name__ == "__main__":
     run()
-
