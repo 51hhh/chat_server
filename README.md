@@ -5,6 +5,8 @@
 ## 使用方法
 可以使用vercel部署
 
+<p dir="auto"><a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F51hhh%2Fchat_server" rel="nofollow"><img src="https://camo.githubusercontent.com/5e471e99e8e022cf454693e38ec843036ec6301e27ee1e1fa10325b1cb720584/68747470733a2f2f76657263656c2e636f6d2f627574746f6e" alt="Deploy with Vercel" data-canonical-src="https://vercel.com/button" style="max-width: 100%;"></a></p>
+
 ## 创建数据库
 https://supabase.com/
 
@@ -28,6 +30,9 @@ github或者google登录，创建一个数据库，找到连接即可。
 
 ![image](https://github.com/51hhh/chat_server/assets/87711493/8b80b18b-04e8-48bb-8152-ce97da2e5cdd)
 
+## api请求
+
+部署后为根目录的/api下，即若你在vercel自定义域名为https://chatserve.polar-bear.eu.org，则api为https://chatserve.polar-bear.eu.org/api/
 
 --------------------------------------------------------
 
