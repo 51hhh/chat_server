@@ -6,4 +6,4 @@
 
 更新：修复部分问题，更改储存用户信息为数据库，添加部分注释，更改响应结构，完善部分功能。 2024.3.8：21：33
 
-![5021ef9ff681c5460fc0eb80fadcd84](https://github.com/51hhh/chat_server/assets/87711493/c56a5a85-c018-4bf3-9c0f-b7db999b8a77)
+![image](https://github.com/51hhh/chat_server/assets/87711493/43d4a999-8979-477a-9fde-3af180ee7020)
