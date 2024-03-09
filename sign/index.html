@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>title</title>
+
+    <script>
+        // 该函数会在页面加载完毕后立即执行，并且每隔1000毫秒（1秒）更新一次时间。
+        window.onload = function() {
+          setInterval(displayDate, 1000);
+        };
+        
+        function displayDate(){
+          document.getElementById("demo").innerHTML = new Date().toLocaleTimeString();
+        }
+    </script>
+
+    <script>
+        function showmessage(message){
+            alert(message);
+        }
+    </script>
+
+
+
+    <!-- <style>
+        body { font-family: Arial, sans-serif; }
+        .login-container { width: 300px; margin: 100px auto; padding: 20px; border: 1px solid #ddd; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; }
+        input[type="submit"] { width: 100%; padding: 10px; background-color: #5fbae9; color: white; border: none; cursor: pointer; }
+        input[type="submit"]:hover { opacity: 0.8; }
+        .error { color: red; }
+    </style> -->
+
+
+    <!-- 登录函数 -->
+    <script>
+        function login() {
+            // 获取单选按钮的值
+            var typeValue = document.querySelector('input[name="type"]:checked').value;
+
+            // 获取用户ID的值
+            var useridValue = document.getElementById('userid').value;
+
+            // 获取密码的值
+            var passwordValue = document.getElementById('password').value;
+
+            // 如果你需要服务器选择的值，还可以获取下拉选择的值
+            var serverValue = document.getElementById('server').value;
+            
+
+            // 创建请求头
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+
+            // 创建请求选项
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: JSON.stringify({
+                    type: typeValue,
+                    userid: useridValue,
+                    password: passwordValue,
+                }),
+                redirect: 'follow'
+            };
+            // 发送请求
+            fetch("https://chatserve.polar-bear.eu.org/api/", requestOptions)
+                .then(response => response.json()) // 假设后端API返回JSON数据
+                .then(result => console.log(result))
+                .catch(error => console.log('error', error));
+            
+            // 防止页面自动刷新
+            return false;
+        }
+    </script>
+
+
+
+
+</head>
+
+<body style="background-color:rgb(241, 147, 156);"></body>
+<body>
+
+
+    <div id="container" style="width:500px">
+ 
+        <div id="header" style="background-color:#FFA500;">
+        <h1 style="margin-bottom:0;">chat_web</h1></div>
+         
+        <div id="menu" style="background-color:#FFD700;height:200px;width:100px;float:left;">
+        <b>sign</b>
+        </div>
+         
+        <div id="content" style="background-color:#EEEEEE;height:200px;width:400px;float:left;">
+
+            <form id="loginForm">
+                <!-- 单选按钮 -->
+                <label></label>
+                <input type="radio" id="sign_up" name="type" value="sign_up">
+                <label for="sign_up">注册</label>
+                <input type="radio" id="sign_in" name="type" value="sign_in" checked>
+                <label for="sign_in">登录</label>
+                <br>
+                
+                <!-- 文本输入框 -->
+                <label for="userid">用户ID:</label>
+                <input type="text" id="userid" name="userid" required>
+              
+                <br>
+        
+                <!-- 密码输入框 -->
+                <label for="password">密码:</label>
+                <input type="password" id="password" name="password" required>
+        
+                <br>
+
+        
+                <!-- 复选框 -->
+                <input type="checkbox" id="remember" name="remember" checked>
+                <label for="remember">记住密码</label>
+              
+                <br>
+        
+                <!-- 下拉列表 -->
+                <label for="server">登录服务器</label>
+                <select id="server" name="server">
+                    <option value="cn">CN</option>
+                    <option value="usa">USA</option>
+                </select>
+        
+                <br>
+        
+                <!-- 提交按钮 -->
+                <input type="button" value="提交" onclick="login()">
+            </form>
+    
+
+        </div>
+
+
+         
+        <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+            <p id="demo"></p>
+        </div>
+         
+
+        
+
+    </div>
+   
+
+
+
+
+
+
+</body>
+   
+
+</html>
