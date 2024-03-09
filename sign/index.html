@@ -59,15 +59,22 @@
             var requestOptions = {
                 method: 'POST',
                 headers: myHeaders,
-                body: JSON.stringify({
-                    type: typeValue,
-                    userid: useridValue,
-                    password: passwordValue,
-                }),
                 redirect: 'follow'
             };
             // 发送请求
-            fetch("https://chatserve.polar-bear.eu.org/api/", requestOptions)
+            const url = new URL("https://chatserve.polar-bear.eu.org/api/");
+                // body: JSON.stringify({
+                //     type: typeValue,
+                //     userid: useridValue,
+                //     password: passwordValue,
+                // }),
+            url.searchParams.append("type", typeValue);
+            url.searchParams.append("userid", useridValue);
+            url.searchParams.append("password", passwordValue); 
+
+
+
+            fetch(url, requestOptions)
                 .then(response => response.json()) // 假设后端API返回JSON数据
                 .then(result => console.log(result))
                 .catch(error => console.log('error', error));
