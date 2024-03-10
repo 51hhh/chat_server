@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>title</title>
 
+
+
+
     <script>
         // 该函数会在页面加载完毕后立即执行，并且每隔1000毫秒（1秒）更新一次时间。
         window.onload = function() {
@@ -55,29 +58,56 @@
             var myHeaders = new Headers();
             myHeaders.append("Accept", "*/*");
 
+            // 创建请求体
+            var raw = JSON.stringify({
+                "userid": useridValue,
+                "password": passwordValue
+            });
+
+
             // 创建请求选项
             var requestOptions = {
                 method: 'POST',
                 headers: myHeaders,
+                body: raw,
                 redirect: 'follow'
             };
-            // 发送请求
-            const url = new URL("https://chatserve.polar-bear.eu.org/api/");
-                // body: JSON.stringify({
-                //     type: typeValue,
-                //     userid: useridValue,
-                //     password: passwordValue,
-                // }),
+            // 发送请求的url
+            const url = new URL("https://chatserve.polar-bear.eu.org/api");
+            // 为请求url后面添加参数
             url.searchParams.append("type", typeValue);
-            url.searchParams.append("userid", useridValue);
-            url.searchParams.append("password", passwordValue); 
 
-
-
+            // 发送请求
             fetch(url, requestOptions)
-                .then(response => response.json()) // 假设后端API返回JSON数据
-                .then(result => console.log(result))
-                .catch(error => console.log('error', error));
+            .then(response => {
+                if (!response.ok) {            
+                    // 如果响应状态码不是2xx，获取错误文本并投掷错误
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+                // 如果响应状态码是2xx，解析JSON
+                return response.json();
+            })
+            .then(data => {
+                // 如果前面的response.json()成功，这里就会接收JSON对象
+                // 接下来处理成功响应
+                showmessage('成功：' + JSON.stringify(data));
+                if (typeValue === 'sign_in') {
+                    // 当typeValue为'sign_in'时处理token
+                    const token = data.token; // 假设响应JSON对象中的token字段名是'token'
+                    // 保存token逻辑（例如使用localStorage）
+                    localStorage.setItem('token', token);
+                    // 页面跳转逻辑，携带token值和userid值
+                    window.location.href = `/chat_web?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(useridValue)}`;
+                }
+            })
+            .catch(error => {
+                // 处理所有的错误情况（包括网络错误或由 throw new Error(text) 触发的错误）
+                showmessage('发生错误：' + error.message);
+            });
+
+    
             
             // 防止页面自动刷新
             return false;
@@ -93,16 +123,16 @@
 <body>
 
 
-    <div id="container" style="width:500px">
+    <div id="container" style="width:1300px">
  
         <div id="header" style="background-color:#FFA500;">
         <h1 style="margin-bottom:0;">chat_web</h1></div>
          
-        <div id="menu" style="background-color:#FFD700;height:200px;width:100px;float:left;">
+        <div id="menu" style="background-color:#FFD700;height:600px;width:100px;float:left;">
         <b>sign</b>
         </div>
          
-        <div id="content" style="background-color:#EEEEEE;height:200px;width:400px;float:left;">
+        <div id="content" style="background-color:#EEEEEE;height:600px;width:1200px;float:left;">
 
             <form id="loginForm">
                 <!-- 单选按钮 -->
