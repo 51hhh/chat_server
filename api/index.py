@@ -13,11 +13,9 @@ import os
 from supabase import create_client, Client
 
 # 从环境变量获取这些值
-# url: str = os.environ.get("SUPABASE_URL")
-# key: str = os.environ.get("SUPABASE_KEY")
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
 
-url = 'https://asknugxgdiaipuvdwtal.supabase.co' # 此处替换成你的Supabase项目URL
-key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFza251Z3hnZGlhaXB1dmR3dGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk3OTgwNDIsImV4cCI6MjAyNTM3NDA0Mn0.lkVnbNQrTkqujrieY7P-8qOsiEdmJLTiBoOcpgXxydo' # 此处替换成你的Supabase项目密钥
 
 supabase: Client = create_client(url, key)
 
