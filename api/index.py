@@ -359,7 +359,7 @@ def get_message(self):
 
 
     # 检查是否为空值
-    if user_id_value is None:
+    if user_id_value is None or user_id_value == "null":
         self._send_error_response("userid为空" ,status_code=400)
         return
     elif token is None:
