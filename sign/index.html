@@ -99,7 +99,7 @@
                     // 保存token逻辑（例如使用localStorage）
                     localStorage.setItem('token', token);
                     // 页面跳转逻辑，携带token值和userid值
-                    window.location.href = `/chat_web?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(useridValue)}`;
+                    window.location.href = `/?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(useridValue)}`;
                 }
             })
             .catch(error => {
