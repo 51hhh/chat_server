@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>消息列表</title>
+    <style>
+        /* ID选择器，应用于ID为 messages-container 的HTML元素样式添加了20像素的外边距 */
+        #messages-container {
+            margin: 20px;
+        }
+        /* `.message-item` 为所有class为 `message-item` 的HTML元素应用样式。
+        这里使用了 `flex` 布局，这是一个强大的CSS布局方法，它允许其中的子元素灵活地排布。
+        `align-items: center;` 会将所有子元素在垂直方向上居中对齐。每个 `.message-item`
+         有20px的底部外边距，使得消息之间有空间隔开。 */
+
+        /* 用于所有消息的通用样式 */
+        .message-item {
+            display: flex;
+            /* flex-direction: column; 垂直布局 */
+            align-items: flex-start; /* 左对齐 */
+            margin-bottom: 20px;
+        }
+
+        /* 用于您自己消息的特定样式 */
+        .message-item.my-message {
+            justify-content: flex-end;
+        }
+                
+            /* .avatar 类应用于显示用户头像的元素。这些样式为头像设置固定的宽和高（50px），
+            背景颜色设置为浅灰色（#ddd），边界半径为 50% 制造出圆形的效果。position: relative;
+            声明了头像的位置是相对位置，这使得其子元素可以相对于它进行绝对定位。头像右侧的外边距是20px，
+            使得头像与其旁边的文本有空间隔开。 */
+            .avatar {
+                width: 50px;
+                height: 50px;
+                background-color: #ddd;
+                border-radius: 50%;
+                position: relative;
+                /* 头像和文本距离 */
+                margin-right: 20px; 
+                
+            }
+                /* .avatar span 选择器样式应用于位于 .avatar 内的 <span> 元素，通常用来显示用户ID。
+                position: absolute; 将 <span> 元素的位置设置为绝对位置，它会相对于其第一个已定位的父元素定位
+                这里是 .avatar。top: 0; 和 right: 20; 定义了这个 <span> 元素相对于父元素右上方的位置。
+                但是应该注意right: 20;缺少单位，正确的应该是类似 right: 20px;。这里的 font-size 设定了字体大小为20px。
+                背景应该是白色，但被注释掉了，border-radius: 10px; 制造了小圆角，padding: 2px; 添加了内边距。 */
+                .avatar span {
+                    position: absolute;
+                    top: 8px;
+                    left: 10px;
+                    right: 12px;
+                    font-size: 20px;
+                    padding: 3px;
+                }
+        .text {
+            display: flex;
+            flex-direction: column; /* 垂直布局 */
+            align-items: flex-start; /* 左对齐 */
+        }
+            .userinfo {
+                display: flex; /* 新增flex布局 */
+                /* flex-direction: column; 垂直布局 */
+                align-items: flex-start; /* 左对齐 */
+            }
+                /* .userid 类为用户ID的显示部分设置样式。字体大小为10px，右侧外边距是5px，white-space: nowrap; 阻止文本换行。 */
+                .userid {
+                    font-size: 10px;
+                    margin-right: 10px;
+                    white-space: nowrap;
+                }
+                /* .timestamp 类为时间戳设置样式。它与 .userid 具有相似的样式规则：字体大小为10px，右侧外边距是5px，且文本不换行。  */
+                .timestamp {
+                    font-size: 10px;
+                    margin-right: 5px;
+                    white-space: nowrap;
+                }
+            /* .message-content 类为实际消息内容设置样式。字体大小较大16px，上方外边距是4px，以与用户ID和时间戳之间保持距离。 */
+            .message-content {
+                max-width: 200px; /* 最大宽度，用来换行 */
+                word-wrap: break-word; /* 保证长单词换行 */
+                overflow-wrap: break-word; /* 同上，保证长单词在边界处换行 */
+                font-size: 18px;
+                margin-top: 5px;
+                align-items: center; /* 垂直中心对齐 */
+                align-self: stretch; /* 拉伸子项填满容器 */
+            }
+
+    </style>
+
+    
+    <!-- 获取message函数 -->
+    <script>
+        // 定义异步函数
+        async function get_message(userid,token) {
+
+            // 创建请求头
+            var myHeaders = new Headers();
+            myHeaders.append("Accept", "*/*");
+
+            // 创建请求体
+            var raw = JSON.stringify({
+                "userid": userid,
+                "token": token
+            });
+
+
+            // 创建请求选项
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+            // 发送请求的url
+            const url = new URL("https://chatserve.polar-bear.eu.org/api");
+            // 为请求url后面添加参数
+            url.searchParams.append("type", "get_message");
+
+            try {
+                // 使用 await 等待 fetch 请求并获取响应
+                const response = await fetch(url, requestOptions);
+                if (!response.ok) {
+                    // 如果响应状态码不是2xx，获取错误文本
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+                // 如果响应状态码是2xx，解析JSON
+                const data = await response.json();
+
+                // 这里就会接收JSON对象
+                messages = data; // 把解析后的数据赋值给全局变量
+                return messages
+            } catch (error) {
+                // 处理所有的错误情况（包括网络错误或由 throw new Error(text) 触发的错误）
+                showmessage('发生错误：' + error.message);
+            }
+        }
+    </script>
+
+
+
+</head>
+<body>
+    <!-- 消息列表容器 -->
+    <div id="messages-container"></div>
+
+
+    <script>
+    // 定义更新DOM的函数
+        function updateDOM(messages) {
+            // 获取消息容器的引用
+            var messagesContainer = document.getElementById('messages-container');
+
+            // 清空消息容器
+            messagesContainer.innerHTML = '';
+
+
+            // 创建并添加消息元素到容器中
+            messages.forEach(function(message) {
+                // 每条消息的容器
+                var messageItem = document.createElement('div');
+                messageItem.className = 'message-item';
+                
+                // 用户头像
+                var avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                avatar.textContent = ''; // 这里可以替换成具体的图片或者用户名首字母等
+                var userIdSpan = document.createElement('span');
+                userIdSpan.textContent = message.userid.slice(0, 2);
+                avatar.appendChild(userIdSpan);
+
+                // 新的text容器，它将包括userinfo和messageContent
+                var text = document.createElement('div'); 
+                text.className = 'text';
+
+                //userinfo容器，包含userid和timestamp
+                var userinfo = document.createElement('div');
+                userinfo.className = 'userinfo';
+
+                // 用户ID
+                var userIdDiv = document.createElement('div');
+                userIdDiv.className = 'userid';
+                userIdDiv.textContent = message.userid;
+                
+                // 时间戳
+                var timestampDiv = document.createElement('div');
+                timestampDiv.className = 'timestamp';
+                timestampDiv.textContent = message.timestamp;
+
+                // 把userid和timestamp放入userinfo容器
+                userinfo.appendChild(userIdDiv);
+                userinfo.appendChild(timestampDiv);
+
+            // 消息内容
+            var messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = message.message;
+
+
+            // 把userinfo和messageContent加入到text容器
+            text.appendChild(userinfo);
+            text.appendChild(messageContent);
+            
+            // 组装元素
+            messageItem.appendChild(avatar);     // 加入头像
+            messageItem.appendChild(text);       // 加入包含userinfo和messageContent的text容器
+            
+            messagesContainer.appendChild(messageItem); // 把整个消息项加入容器
+            });
+
+        }
+
+
+
+
+        // 创建一个URLSearchParams对象，传入当前页面URL的查询字符串
+        const queryParams = new URLSearchParams(window.location.search);
+        // 使用get方法来检索'token'查询参数的值
+        const userid = queryParams.get('userid');
+        const token = queryParams.get('token');
+
+        
+        // 立即执行的异步函数来获取消息并更新DOM
+        (async function() {
+            try {
+                messages = await get_message(userid, token);
+                updateDOM(messages); // 调用更新DOM的函数
+            } catch (error) {
+                console.error('加载消息错误:', error);
+                // 处理错误，例如显示错误消息
+            }
+        })();
+
+
+
+    </script>
+
+</body>
+</html>
