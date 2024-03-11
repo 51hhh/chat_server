@@ -113,7 +113,7 @@
                 redirect: 'follow'
             };
             // 发送请求的url
-            const url = new URL("https://chatserve.polar-bear.eu.org/api");
+            const url = new URL("http://127.0.0.1:8000");
             // 为请求url后面添加参数
             url.searchParams.append("type", "get_message");
 
@@ -209,6 +209,15 @@
             messagesContainer.appendChild(messageItem); // 把整个消息项加入容器
             });
 
+
+
+
+
+            // 当添加完所有消息后，平滑滚动到最后一条消息
+            if(messagesContainer.lastElementChild) {
+                messagesContainer.lastElementChild.scrollIntoView({ behavior: "smooth" });
+            }
+
         }
 
 
@@ -220,19 +229,29 @@
         const userid = queryParams.get('userid');
         const token = queryParams.get('token');
 
+        // 这里定义消息旧状态的全局变量，用于比较
+        let oldMessages = [];
         
-        // 立即执行的异步函数来获取消息并更新DOM
-        (async function() {
+        // 定义一个函数，用于获取消息并更新DOM
+        async function pollMessages() {
             try {
-                messages = await get_message(userid, token);
-                updateDOM(messages); // 调用更新DOM的函数
+                const newMessages = await get_message(userid, token);
+                // 比较新旧消息是否相同
+                if (JSON.stringify(newMessages) !== JSON.stringify(oldMessages)) {
+                    updateDOM(newMessages); // 调用更新DOM的函数
+                    oldMessages = newMessages; // 更新消息旧状态
+                }
             } catch (error) {
                 console.error('加载消息错误:', error);
                 // 处理错误，例如显示错误消息
             }
-        })();
+        }
 
+        // 使用setInterval来设置定时器，每隔一定时间（例如5秒）执行pollMessages函数
+        setInterval(pollMessages, 5000);
 
+        // 也可以立即调用一次，以便在页面加载时获取消息
+        pollMessages();
 
     </script>
 
