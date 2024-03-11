@@ -19,7 +19,9 @@ key: str = os.environ.get("SUPABASE_KEY")
 
 supabase: Client = create_client(url, key)
 
-
+# 全局缓存，存储最近的消息数据
+MESSAGES_CACHE = []
+USERS_INFO = []
 
 class handler(BaseHTTPRequestHandler):
 
@@ -94,6 +96,29 @@ class handler(BaseHTTPRequestHandler):
 
 
 
+def get_user_info(self,user_id):
+    global USERS_INFO
+    if USERS_INFO == []:
+        try:
+            history_user_info = supabase.table("users").select("*").execute()
+        except:
+            self._send_error_response("网络错误" ,status_code=404)
+            return
+        # json字符串
+        history_user_info_data = history_user_info.data
+        # 本地缓存
+        USERS_INFO = history_user_info.data
+        a_user_info = [message for message in USERS_INFO if message['userid'] == user_id]
+        return a_user_info
+    else:
+        # 从缓存中获取信息
+        a_user_info = [message for message in USERS_INFO if message['userid'] == user_id]
+        return a_user_info
+
+
+
+
+
 """
 使用给定的查询参数注册用户。
 作用:
@@ -114,6 +139,7 @@ class handler(BaseHTTPRequestHandler):
     无 password
     用户已存在
 """
+
 
 
 def sign_up(self): 
@@ -164,6 +190,8 @@ def sign_up(self):
             self._send_error_response("网络错误" ,status_code=404)
             return
         
+        
+
         # 用户成功创建，成功响应代码...
         data = {
             "user_id": user_id_value,
@@ -224,12 +252,19 @@ def sign_in(self):
         user_info_data = user_info.data[0]
         # 对比密码
         if user_info_data["password"] == password_value:
+            
+            # 用户登录，清除本地用户缓存USERS_INFO
+            global USERS_INFO
+            USERS_INFO = []
+            
             # 查询 token
-
             token = user_info.data[0]["token"]
             if token != None:
                 # 用户已经登录的响应......
                 # 发送带有 token 的登录成功响应......
+
+
+
 
                 data = {
                     "user_id": user_id_value,
@@ -297,7 +332,8 @@ def message(self):
         return
     
 
-    # 数据库获取信息
+
+
     try:
         user_info = supabase.table("users").select("*").eq("userid", user_id_value).execute()
     except:
@@ -325,6 +361,10 @@ def message(self):
                 self._send_error_response("网络错误" ,status_code=404)
                 return
             
+            # 清除本地消息缓存
+            global MESSAGES_CACHE
+            MESSAGES_CACHE = []
+
             # 如果保存成功，发送成功响应
             data = {
                 "message": "消息发送成功",
@@ -365,28 +405,41 @@ def get_message(self):
     elif token is None:
         self._send_error_response("token为空" ,status_code=400)
         return
+    
+ 
+    # try:
+    #     user_info = supabase.table("users").select("*").eq("userid", user_id_value).execute()
+    # except:
+    #     self._send_error_response("网络错误" ,status_code=404)
+    #     return
+    
+    # 返回匹配userid的所有信息[{'userid': '123456', 'password': '123456', 'token': '96e0f5b8b2c5c88dd6134b4cabae2734', 'token_time': None}]
+    a_user_info = get_user_info(self,user_id_value)
+    
+    # 若为空则无此用户，判断长度是否非零
+    if len(a_user_info) != 0:
+        # 获取用户信息字典
+        user_info_dict = a_user_info[0]
+        #对比token
+        if token == user_info_dict.get("token",None):
+            # 如果有缓存
+            global MESSAGES_CACHE
+            if MESSAGES_CACHE == []:
+                try:
+                    chat_history_response = supabase.table("messages").select("*").execute()
+                except:
+                    self._send_error_response("网络错误" ,status_code=404)
+                    return
+                # 发送聊天历史的json字符串
+                chat_history_data = chat_history_response.data
+                # 本地缓存
+                MESSAGES_CACHE = chat_history_response.data
+                self._send_success_response(chat_history_data, status_code=200)
+            else:
+                # 从缓存中获取信息
+                self._send_success_response(MESSAGES_CACHE, status_code=200)
 
 
-    try:
-        user_info = supabase.table("users").select("*").eq("userid", user_id_value).execute()
-    except:
-        self._send_error_response("网络错误" ,status_code=404)
-        return
-
-
-    if user_info.data:
-        user_info_data = user_info.data[0]
-        if token == user_info_data["token"]:
-        
-            
-            try:
-                chat_history_response = supabase.table("messages").select("*").execute()
-            except:
-                self._send_error_response("网络错误" ,status_code=404)
-                return
-             # 发送聊天历史的json字符串
-            chat_history_data = chat_history_response.data
-            self._send_success_response(chat_history_data, status_code=200)
         else:
             self._send_error_response("token错误" ,status_code=400)
     else:
