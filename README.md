@@ -76,3 +76,4 @@ https://apifox.com/apidoc/shared-135607bc-4296-40dd-9835-4129ab657c38
 
 前端：css布局更新聊天页面容器布局调整，自己消息靠右区分，发送款即按钮样式修改，添加发送消息功能，修复部分错误，优化代码注释。
 
+![](https://cdn.ziyourufeng.eu.org/51hhh/img_bed/main/img/2024.3.10/20240312212812.png)
