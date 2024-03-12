@@ -1,17 +1,40 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    
     <meta charset="UTF-8">
     <title>消息列表</title>
+
+    <script>
+        // 定义全局url
+        const originalUrl = new URL("https://chatserve.polar-bear.eu.org/api/");   
+    </script>
+
     <style>
+        /* 弹性容器的样式 */
+        body {
+            display: flex; /* 启用flex布局 */
+            flex-direction: column; /* 子元素纵向排列 */
+            height: 100vh; /* 使body占满整个视口高度 */
+            margin: 0; /* 移除默认的边距 */
+            background-color: rgb(246, 244, 244); /* 为body指定一种背景颜色 */
+            
+        }
+
         /* ID选择器，应用于ID为 messages-container 的HTML元素样式添加了20像素的外边距 */
         #messages-container {
+            flex: 1; /* 让#messages-container填满除#input-area之外的所有可用空间 */
             margin: 20px;
+            overflow-y: auto; /* 消息溢出时可滚动 */
+
+            margin: 10px; /* 在元素周围添加外边距，来实现空白间距效果 */
+            padding: 10px; /* 内边距大小 */
+            background-color: #fff; /* 为消息容器设置背景颜色 */
+            box-sizing: border-box; /* 确保内边距和边框不会扩大元素 */
+            border: 1px solid #ddd; /* 可选，为消息容器添加边框 */
+            border-radius: 12px; /* 圆角的大小，您可以自由调整 */
         }
-        /* `.message-item` 为所有class为 `message-item` 的HTML元素应用样式。
-        这里使用了 `flex` 布局，这是一个强大的CSS布局方法，它允许其中的子元素灵活地排布。
-        `align-items: center;` 会将所有子元素在垂直方向上居中对齐。每个 `.message-item`
-         有20px的底部外边距，使得消息之间有空间隔开。 */
+
 
         /* 用于所有消息的通用样式 */
         .message-item {
@@ -19,25 +42,35 @@
             /* flex-direction: column; 垂直布局 */
             align-items: flex-start; /* 左对齐 */
             margin-bottom: 20px;
+            
+        }
+        /* 用于他人消息的特定样式 */
+        .other-message {
+            justify-content: flex-start; /* 把其他人的消息放到容器的左侧 */
         }
 
         /* 用于您自己消息的特定样式 */
-        .message-item.my-message {
-            justify-content: flex-end;
+        .my-message {
+            flex-direction: row-reverse; /* 子元素的排列顺序变为从右到左 */
         }
+        .my-message .message-content {
+            text-align: right; /* 将文本对齐到右边 */
+        }
+        .my-message .text {
+            align-items: flex-end; /* 右对齐 */
+        }
+
                 
-            /* .avatar 类应用于显示用户头像的元素。这些样式为头像设置固定的宽和高（50px），
-            背景颜色设置为浅灰色（#ddd），边界半径为 50% 制造出圆形的效果。position: relative;
-            声明了头像的位置是相对位置，这使得其子元素可以相对于它进行绝对定位。头像右侧的外边距是20px，
-            使得头像与其旁边的文本有空间隔开。 */
+
             .avatar {
                 width: 50px;
                 height: 50px;
                 background-color: #ddd;
                 border-radius: 50%;
                 position: relative;
-                /* 头像和文本距离 */
+                /* 头像左右距离 */
                 margin-right: 20px; 
+                margin-left: 20px; 
                 
             }
                 /* .avatar span 选择器样式应用于位于 .avatar 内的 <span> 元素，通常用来显示用户ID。
@@ -61,7 +94,7 @@
             .userinfo {
                 display: flex; /* 新增flex布局 */
                 /* flex-direction: column; 垂直布局 */
-                align-items: flex-start; /* 左对齐 */
+                
             }
                 /* .userid 类为用户ID的显示部分设置样式。字体大小为10px，右侧外边距是5px，white-space: nowrap; 阻止文本换行。 */
                 .userid {
@@ -77,7 +110,7 @@
                 }
             /* .message-content 类为实际消息内容设置样式。字体大小较大16px，上方外边距是4px，以与用户ID和时间戳之间保持距离。 */
             .message-content {
-                max-width: 200px; /* 最大宽度，用来换行 */
+                max-width: 450px; /* 最大宽度，用来换行 */
                 word-wrap: break-word; /* 保证长单词换行 */
                 overflow-wrap: break-word; /* 同上，保证长单词在边界处换行 */
                 font-size: 18px;
@@ -86,8 +119,58 @@
                 align-self: stretch; /* 拉伸子项填满容器 */
             }
 
+        /* 底部输入区域的样式 */
+        #input-area {
+            display: flex; /* 添加flex布局 */
+            align-items: center; /* 垂直居中对齐子元素 */
+            padding: 10px 30px; /* 左右padding设置30px，上下略减少为10px*/
+            flex: 0 1 20%; /* 输入区域可伸缩，优先分配20%的空间 */
+            position: relative;
+            box-sizing: border-box; /* 计算内边距和边界宽度在宽度内 */
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 30px;
+            background: #f9f9f9; /* 或您喜欢的颜色 */
+            box-shadow: 0 -1px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 输入框的样式 */
+        #message-textarea {
+            width: calc(80% - 44px); /* calc() 函数来计算输入框实际的宽度 */
+            padding: 20px;
+            margin-right: 2%; /* 为发送按钮留出间隙 */
+            border: 1px solid #ccc;
+            border-radius: 15px; /* 圆角大小 */
+            border-radius: 15px; /* 圆角大小 */
+            font-size: 25px; /* 字体大小 */
+
+            overflow-y: auto; /* 超出时允许纵向滚动 */
+            word-wrap: break-word; /* 允许单词内断行 */
+            resize: none;/* 禁止用户调整大小 */
+
+            max-width: calc(80% - 44px); /* 最大宽度，用来换行 */
+            word-wrap: break-word; /* 保证长单词换行 */
+            overflow-wrap: break-word; /* 同上，保证长单词在边界处换行 */
+        }
+
+        /* 发送按钮的样式 */
+        #send-button {
+            width: 10%;
+            padding: 20px;
+            border: none;
+            border-radius: 15px; /* 圆角大小 */
+            background: #007bff; /* 按钮颜色 */
+            color: white; /* 文本颜色 */
+        }
+
     </style>
 
+    <script>
+        function showmessage(message){
+            alert(message);
+        }
+    </script>
     
     <!-- 获取message函数 -->
     <script>
@@ -112,8 +195,10 @@
                 body: raw,
                 redirect: 'follow'
             };
-            // 发送请求的url
-            const url = new URL("https://chatserve.polar-bear.eu.org/api");
+
+            // 创建一个新的URL对象，作为原始URL的副本
+            const url = new URL(originalUrl);
+
             // 为请求url后面添加参数
             url.searchParams.append("type", "get_message");
 
@@ -138,12 +223,69 @@
         }
     </script>
 
+    <!-- send_message函数 -->
+    <script>
+        // 定义异步函数
+        async function send_message(message,userid,token) {
 
+            // 创建请求头
+            var myHeaders = new Headers();
+            myHeaders.append("Accept", "*/*");
+
+            // 创建请求体
+            var raw = JSON.stringify({
+                "userid": userid,
+                "token": token,
+                "message": message
+            });
+
+
+            // 创建请求选项
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+            // 创建一个新的URL对象，作为原始URL的副本
+            const url = new URL(originalUrl);
+ 
+            // 为请求url后面添加参数
+            url.searchParams.append("type", "message");
+
+            try {
+                // 使用 await 等待 fetch 请求并获取响应
+                const response = await fetch(url, requestOptions);
+                if (!response.ok) {
+                    // 如果响应状态码不是2xx，获取错误文本
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+                // 如果响应状态码是2xx，解析JSON
+                const data = await response.json();
+
+                // 这里就会接收JSON对象
+                messages = data; // 把解析后的数据赋值给全局变量
+                return messages
+            } catch (error) {
+                // 处理所有的错误情况（包括网络错误或由 throw new Error(text) 触发的错误）
+                showmessage('发生错误：' + error.message);
+                return false
+            }
+        }
+    </script>
 
 </head>
 <body>
     <!-- 消息列表容器 -->
     <div id="messages-container"></div>
+
+    <!-- 底部的输入区域 -->
+    <div id="input-area">
+        <textarea id="message-textarea" placeholder="输入消息..."></textarea>
+        <button id="send-button">发送</button>
+    </div>
 
 
     <script>
@@ -161,6 +303,13 @@
                 // 每条消息的容器
                 var messageItem = document.createElement('div');
                 messageItem.className = 'message-item';
+
+                // 根据消息是否属于当前用户，设置不同的样式
+                if (message.userid === userid) {
+                    messageItem.classList.add('my-message');
+                } else {
+                    messageItem.classList.add('other-message');
+                }
                 
                 // 用户头像
                 var avatar = document.createElement('div');
@@ -248,11 +397,33 @@
         }
 
         // 使用setInterval来设置定时器，每隔一定时间（例如5秒）执行pollMessages函数
-        setInterval(pollMessages, 5000);
+        setInterval(pollMessages, 3000);
 
         // 也可以立即调用一次，以便在页面加载时获取消息
         pollMessages();
 
+
+        //send_message
+
+        // 获取文本输入区域和发送按钮的DOM引用
+        const textarea = document.getElementById('message-textarea');
+        const sendButton = document.getElementById('send-button');
+
+        // 为发送按钮添加点击事件侦听器
+        sendButton.addEventListener('click', function() {
+            // 获取文本区域的内容
+            const message = textarea.value.trim();
+
+            // 如果文本区域不为空，则调用 send_message 函数并传递消息
+            if (message) {
+                send_message(message, userid, token)
+                textarea.value = '';
+            } else {
+                // 可选：如果用户尝试发送空消息，则可以在这里显示一个警告
+                showmessage('不能发送空消息喵！');
+            }
+
+        });
     </script>
 
 </body>
