@@ -7,6 +7,53 @@
     <title>title</title>
 
 
+    <style>
+        /* 将CSS规则定义在外部样式表中 */
+        /* 为所有设备设置基础样式 */
+        body {
+        background-color: rgb(241, 147, 156);
+        }
+
+        #container {
+        width: 80vw; /* 容器宽度基于视口宽度 */
+        margin: auto;
+        }
+
+        #header {
+        background-color: #FFA500;
+        }
+
+        #header h1 {
+        margin-bottom: 0;
+        }
+
+        #menu {
+        background-color: #FFD700;
+        width: 10vw; /* 菜单宽度基于视口宽度 */
+        float: left;
+        }
+
+        #content {
+        background-color: #EEEEEE;
+        width: 70vw; /* 内容区域宽度基于视口宽度 */
+        float: left;
+        }
+
+        #footer {
+        background-color: #FFA500;
+        text-align: center;
+        }
+
+        /* 示例媒体查询：当视口宽度小于某个特定值时 */
+        @media (max-width: 600px) {
+        #container, #menu, #content {
+            width: 100vw; /* 在小屏幕上容器、菜单和内容占满整个视口宽度 */
+        }
+        }
+    </style>
+
+
+    
 
     <script>
         function showmessage(message){
@@ -33,21 +80,21 @@
 <body style="background-color:rgb(241, 147, 156);"></body>
 <body>
 
-    <div id="container" style="width:1300px">
+    <div id="container" style="width:100vw;"> 
  
-        <div id="header" style="background-color:#FFA500;">
+        <div id="header" style="background-color:#FFA500; width:100%;">
         <h1 style="margin-bottom:0;">chat_web</h1></div>
          
-        <div id="menu" style="background-color:#FFD700;height:600px;width:100px;float:left;">
-        <b>chat</b>
+        <div id="menu" style="background-color:#FFD700;height:80vh;width:8vw;float:left;">
+        <b>sign</b>
         </div>
          
-        <div id="content" style="background-color:#EEEEEE;height:600px;width:1200px;float:left;">
+        <div id="content" style="background-color:#EEEEEE;height:80vh;width:92vw;float:left;">
             <!-- 添加ID以便可以通过JavaScript引用 -->
             <div id="iframe-container"></div>
         </div>
          
-        <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+        <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;width:100%;">
             <p id="demo"></p>
         </div>
          
