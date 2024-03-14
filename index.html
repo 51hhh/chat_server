@@ -52,9 +52,6 @@
         }
     </style>
 
-
-    
-
     <script>
         function showmessage(message){
             alert(message);
@@ -79,6 +76,7 @@
 
 <body style="background-color:rgb(241, 147, 156);"></body>
 <body>
+
 
     <div id="container" style="width:100vw;"> 
  
@@ -110,7 +108,7 @@
 
 
         // 创建iframe的src属性
-        var iframeSrc = `/message/?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(userid)}`;
+        var iframeSrc = `/chat_web/message/?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(userid)}`;
 
         // 获取容器元素的引用
         var container = document.getElementById('iframe-container');
