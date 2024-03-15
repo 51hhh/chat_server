@@ -88,3 +88,41 @@ https://apifox.com/apidoc/shared-135607bc-4296-40dd-9835-4129ab657c38
 2024.3.14
 
 窗口大小实现初步自适应调整。
+
+----------------------------------------------------------
+2024.3.15
+
+周末到了，开始干大事。
+
+将“关系型数据库”设计的范式来设计群聊数据库结构提上日程。
+
+对多群组聊天架构开始设计
+
+一个是群组表（Groups），用以存储群组的基本信息；另一个是群成员表（GroupMembers），用于存储群组成员的信息。如果你需要存储消息，还可以设计一个消息表（Messages）来存储群聊消息。
+
+以下是一个基础的表格设计示例：
+
+群组表（Groups）：
+- GroupID：唯一标识每个群组的ID。
+- GroupName：群组的名称。
+- CreateTime：群组创建的时间。
+- OtherInfo：如群组描述、群组头像等其他信息。
+
+群成员表（GroupMembers）：
+- MemberID：唯一标识每个成员的ID。
+- GroupID：成员所在群组的ID。
+- JoinTime：成员加入群组的时间。
+- MemberRole：成员在群组中的角色（例如：管理员、普通成员）。
+
+消息表（Messages）：
+- MessageID：唯一标识每条消息的ID。
+- GroupID：消息所属的群组ID。
+- SenderID：发送消息成员的ID。
+- MessageContent：消息内容。
+- SendTime：消息发送的时间。
+
+在这种设计方案中，GroupID 是关联“群组表”和“群成员表”的外键。这样你可以通过一个群组ID就能查询到该群组所有的成员，同时群组和消息也是通过 GroupID 关联的。
+
+
+![image](https://github.com/51hhh/chat_server/assets/87711493/ffd43c4b-e229-434c-9386-810830bb0978)
+
