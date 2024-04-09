@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>title</title>
-
-
+    <script>
+        // 定义全局url
+        const originalUrl = new URL("https://chatserve.polar-bear.eu.org/api/");   
+    </script>
     <style>
         /* 将CSS规则定义在外部样式表中 */
         /* 为所有设备设置基础样式 */
@@ -15,12 +17,13 @@
         }
 
         #container {
-        width: 80vw; /* 容器宽度基于视口宽度 */
+        width: 100vw; /* 容器宽度基于视口宽度 */
         margin: auto;
         }
 
         #header {
-        background-color: #FFA500;
+        background-color: #fcc515;
+        width:100vw;
         }
 
         #header h1 {
@@ -28,30 +31,149 @@
         }
 
         #menu {
-        background-color: #FFD700;
-        width: 10vw; /* 菜单宽度基于视口宽度 */
+        background-color: #ffe77c;
         float: left;
+        height:80vh; /* 菜单宽度基于视口宽度 */
+        width:15vw;
+        
         }
 
         #content {
         background-color: #EEEEEE;
-        width: 70vw; /* 内容区域宽度基于视口宽度 */
         float: left;
+        height:80vh;
+        width:85vw;/* 内容区域宽度基于视口宽度 */
         }
 
         #footer {
-        background-color: #FFA500;
+        background-color: #fff2cb;
         text-align: center;
+        clear:both;
+        width:100%;
         }
 
-        /* 示例媒体查询：当视口宽度小于某个特定值时 */
-        @media (max-width: 600px) {
-        #container, #menu, #content {
-            width: 100vw; /* 在小屏幕上容器、菜单和内容占满整个视口宽度 */
+        /* 控制容器窗口占比 */
+        #iframe-container {
+            width: 100%;
+            height: 100%;
         }
+
+
+        /* 群组选择按钮样式 */
+        .group-button {
+            padding: 10px;
+            margin: 5px auto;/* 上下间距5px，左右自动（居中） */
+            background-color: #ebff7c;/* 默认背景色 */
+            border-radius: 15px;/* 圆角半径 */
+            text-align: center;/* 文本居中 */
+            cursor: pointer;/* 鼠标悬停时为手指指针形状 */
+            font-size: 12px;  /* 字体大小 */
+            font-weight: bold;/* 字体加粗 */
+            color: #000000;  /* 字体颜色 */
+            border: 1px solid #6d6d6d; /* 边缘线色 */
+            width: 75%;
+            transition: background-color 0.3s, border-color 0.3s; /* 当背景色、边框、大小发生变化，变化在0.3秒内平滑过渡完成 */
+            /* 其他想要添加的样式 */
+            background: linear-gradient(to right, #e9ff6f, #74ff7c); /* 设定一个从右到左，由#ebff7c渐变为#74ff7c的背景渐变。 */
+            background-size: 200% 200%; /* 把渐变尺寸设置得比容器大，以便渐变可以移动 */
+            animation: gradient 5s linear infinite; /* 应用一个无限循环，每次循环5秒的名为gradient的动画。 */
         }
+        /* 鼠标悬停在按钮上时的样式 */
+        .group-button:hover {
+            background-color: #ffff64;  /* 鼠标悬停状态下的背景色 */
+            border-color: #a2a2a2;     /* 鼠标悬停状态下边框颜色 */
+            transform: scale(1.01); /* 鼠标悬停时放大按钮为原大小的1.01倍 */
+        }
+
+        /* 背景色的动画 */
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;  /* 渐变起点从左边开始 */
+            }
+            50% {
+                background-position: 100% 50%; /* 渐变移动到右边 */
+            }
+            100% {
+                background-position: 0% 50%;  /* 渐变回到左边，形成一个循环 */
+            }
+        }
+
+
+
+        /* 提示窗口的基本样式 */
+        .custom-alert {
+            display: none; /* 默认不显示 */
+            position: fixed; /* 固定位置显示 */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000; /* 确保在最上层 */
+            background-color: #f4f4f4; /* 背景色 */
+            padding: 20px;
+            border-radius: 5px; /* 圆角边框 */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25); /* 阴影效果 */
+        }
+
+        /* 提示内容的样式 */
+        .custom-alert-content {
+            text-align: center;
+        }
+
+        /* 提示信息文字的样式 */
+        .custom-alert-message {
+            margin-bottom: 20px;
+        }
+
+        /* 关闭按钮的样式 */
+        .close-btn {
+            padding: 5px 10px;
+            background-color: #ff4040; /* 按钮背景色 */
+            color: white; /* 按钮文字颜色 */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+
+
     </style>
 
+    <script>
+        // 显示自定义提示窗口的函数
+        function showCustomAlert(message, duration) {
+            var alertBox = document.getElementById('customAlert');
+            var alertMessage = alertBox.querySelector('.custom-alert-message');
+            
+            alertMessage.innerHTML = message; // 设置提示信息的内容 
+            
+            if(alertBox.style.display === 'none' || !alertBox.style.display) {
+                alertBox.style.display = 'block'; // 显示提示窗口
+            }
+
+            // 如果指定了时间，则设置定时器，时间到后关闭提示窗口
+            if(duration) {
+                setTimeout(function() {
+                    alertBox.style.display = 'none';
+                }, duration);
+            }
+        }
+        // 关闭自定义提示窗口的函数
+        function closeCustomAlert() {
+            var alertBox = document.getElementById('customAlert');
+            // 检查提示窗口是否正在显示中
+            if(alertBox.style.display === 'block') {
+                // 如果正在显示中，设置display为'none'来隐藏它
+                alertBox.style.display = 'none';
+            } else {
+                // 如果提示窗口已经被隐藏，可以在这里添加任何你需要处理的逻辑
+                console.log("提醒窗口已隐藏");
+            }
+        }
+
+        function showmessage(message){
+            showCustomAlert(message); // 显示提示信息3秒后自动关闭
+        }
+    </script>
 
     <script>
         // 该函数会在页面加载完毕后立即执行，并且每隔1000毫秒（1秒）更新一次时间。
@@ -64,22 +186,8 @@
         }
     </script>
 
-    <script>
-        function showmessage(message){
-            alert(message);
-        }
-    </script>
 
 
-
-    <!-- <style>
-        body { font-family: Arial, sans-serif; }
-        .login-container { width: 300px; margin: 100px auto; padding: 20px; border: 1px solid #ddd; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; }
-        input[type="submit"] { width: 100%; padding: 10px; background-color: #5fbae9; color: white; border: none; cursor: pointer; }
-        input[type="submit"]:hover { opacity: 0.8; }
-        .error { color: red; }
-    </style> -->
 
 
     <!-- 登录函数 -->
@@ -116,8 +224,8 @@
                 body: raw,
                 redirect: 'follow'
             };
-            // 发送请求的url
-            const url = new URL("https://chatserve.polar-bear.eu.org/api");
+            // 创建一个新的URL对象，作为原始URL的副本
+            const url = new URL(originalUrl);
             // 为请求url后面添加参数
             url.searchParams.append("type", typeValue);
 
@@ -161,22 +269,29 @@
 
 
 
+
 </head>
 
-<body style="background-color:rgb(241, 147, 156);"></body>
+
 <body>
+    <!-- 提示窗口 -->
+    <div id="customAlert" class="custom-alert">
+        <div class="custom-alert-content">
+            <span class="custom-alert-message">这是一条提示信息！</span>
+            <button class="close-btn" onclick="closeCustomAlert()">关闭</button>
+        </div>
+    </div>
 
-
-    <div id="container" style="width:100vw;"> 
+    <div id="container"> 
  
-        <div id="header" style="background-color:#FFA500; width:100%;">
+        <div id="header" >
         <h1 style="margin-bottom:0;">chat_web</h1></div>
          
-        <div id="menu" style="background-color:#FFD700;height:80vh;width:8vw;float:left;">
+        <div id="menu">
         <b>sign</b>
         </div>
          
-        <div id="content" style="background-color:#EEEEEE;height:80vh;width:92vw;float:left;">
+        <div id="content">
 
             <form id="loginForm">
                 <!-- 单选按钮 -->
@@ -201,7 +316,8 @@
 
         
                 <!-- 复选框 -->
-                <input type="checkbox" id="remember" name="remember" checked>
+                <!-- <input type="checkbox" id="remember" name="remember" checked> 默认勾选状态-->
+                <input type="checkbox" id="remember" name="remember" >
                 <label for="remember">记住密码</label>
                 
                 <br>
@@ -224,15 +340,27 @@
 
 
          
-        <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;width:100%;">
+        <div id="footer">
             <p id="demo"></p>
         </div>
-         
-
-        
-
     </div>
    
+
+
+    <script>
+        // 获取复选框元素
+        var checkbox = document.getElementById('remember');
+
+        // 为复选框添加change事件监听器
+        checkbox.addEventListener('change', function() {
+            // 检查复选框是否被勾选
+            if(checkbox.checked) {
+                // 显示提示信息
+                showmessage('没关系，即使你勾选记住密码我也记不住');
+            }
+        });
+    </script>
+
 
 
 
@@ -240,5 +368,6 @@
 
 
 </body>
+   
 
 </html>
