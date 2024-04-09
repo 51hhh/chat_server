@@ -7,7 +7,7 @@
 
     <script>
         // 定义全局url
-        const originalUrl = new URL("https://chatserve.polar-bear.eu.org/api/");   
+        const originalUrl = new URL("http://127.0.0.1:8000");   
     </script>
 
     <style>
@@ -164,18 +164,87 @@
             color: white; /* 文本颜色 */
         }
 
+
+
+
+        /* 提示窗口的基本样式 */
+        .custom-alert {
+            display: none; /* 默认不显示 */
+            position: fixed; /* 固定位置显示 */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000; /* 确保在最上层 */
+            background-color: #f4f4f4; /* 背景色 */
+            padding: 20px;
+            border-radius: 5px; /* 圆角边框 */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25); /* 阴影效果 */
+        }
+
+        /* 提示内容的样式 */
+        .custom-alert-content {
+            text-align: center;
+        }
+
+        /* 提示信息文字的样式 */
+        .custom-alert-message {
+            margin-bottom: 20px;
+        }
+
+        /* 关闭按钮的样式 */
+        .close-btn {
+            padding: 5px 10px;
+            background-color: #ff4040; /* 按钮背景色 */
+            color: white; /* 按钮文字颜色 */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
     </style>
 
     <script>
-        function showmessage(message){
-            alert(message);
+        // 显示自定义提示窗口的函数
+        function showCustomAlert(message, duration) {
+            var alertBox = document.getElementById('customAlert');
+            var alertMessage = alertBox.querySelector('.custom-alert-message');
+            
+            alertMessage.innerHTML = message; // 设置提示信息的内容 
+            
+            if(alertBox.style.display === 'none' || !alertBox.style.display) {
+                alertBox.style.display = 'block'; // 显示提示窗口
+            }
+
+            // 如果指定了时间，则设置定时器，时间到后关闭提示窗口
+            if(duration) {
+                setTimeout(function() {
+                    alertBox.style.display = 'none';
+                }, duration);
+            }
+        }
+        // 关闭自定义提示窗口的函数
+        function closeCustomAlert() {
+            var alertBox = document.getElementById('customAlert');
+            // 检查提示窗口是否正在显示中
+            if(alertBox.style.display === 'block') {
+                // 如果正在显示中，设置display为'none'来隐藏它
+                alertBox.style.display = 'none';
+            } else {
+                // 如果提示窗口已经被隐藏，可以在这里添加任何你需要处理的逻辑
+                console.log("提醒窗口已隐藏");
+            }
+        }
+
+        function showmessage(message,time=3000){
+            showCustomAlert(message, time); // 显示提示信息3秒后自动关闭
+            console.error(message);
         }
     </script>
     
     <!-- 获取message函数 -->
     <script>
         // 定义异步函数
-        async function get_message(userid,token) {
+        async function get_message(userid,token,group_id) {
 
             // 创建请求头
             var myHeaders = new Headers();
@@ -184,7 +253,8 @@
             // 创建请求体
             var raw = JSON.stringify({
                 "userid": userid,
-                "token": token
+                "token": token,
+                "group_id": group_id
             });
 
 
@@ -226,7 +296,7 @@
     <!-- send_message函数 -->
     <script>
         // 定义异步函数
-        async function send_message(message,userid,token) {
+        async function send_message(message,userid,token,group_id) {
 
             // 创建请求头
             var myHeaders = new Headers();
@@ -236,7 +306,8 @@
             var raw = JSON.stringify({
                 "userid": userid,
                 "token": token,
-                "message": message
+                "message": message,
+                "group_id": group_id
             });
 
 
@@ -278,6 +349,18 @@
 
 </head>
 <body>
+    <!-- 提示窗口 -->
+    <div id="customAlert" class="custom-alert">
+        <div class="custom-alert-content">
+            <span class="custom-alert-message">这是一条提示信息！</span>
+            <button class="close-btn" onclick="closeCustomAlert()">关闭</button>
+        </div>
+    </div>
+
+
+
+
+
     <!-- 消息列表容器 -->
     <div id="messages-container"></div>
 
@@ -377,6 +460,7 @@
         // 使用get方法来检索'token'查询参数的值
         const userid = queryParams.get('userid');
         const token = queryParams.get('token');
+        const group_id = queryParams.get('group_id');
 
         // 这里定义消息旧状态的全局变量，用于比较
         let oldMessages = [];
@@ -384,7 +468,7 @@
         // 定义一个函数，用于获取消息并更新DOM
         async function pollMessages() {
             try {
-                const newMessages = await get_message(userid, token);
+                const newMessages = await get_message(userid, token,group_id);
                 // 比较新旧消息是否相同
                 if (JSON.stringify(newMessages) !== JSON.stringify(oldMessages)) {
                     updateDOM(newMessages); // 调用更新DOM的函数
@@ -416,7 +500,7 @@
 
             // 如果文本区域不为空，则调用 send_message 函数并传递消息
             if (message) {
-                send_message(message, userid, token)
+                send_message(message, userid, token,group_id)
                 textarea.value = '';
             } else {
                 // 可选：如果用户尝试发送空消息，则可以在这里显示一个警告
