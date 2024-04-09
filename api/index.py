@@ -3,7 +3,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 import json
 from tarfile import data_filter
-from tkinter import NO
 from urllib.parse import urlparse, parse_qs
 import secrets
 from matplotlib import type1font
