@@ -1,4 +1,2 @@
 supabase
-tarfile
-tkinter
 matplotlib
