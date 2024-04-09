@@ -1,15 +1,400 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>title</title>
+    
     <script>
+        // 定义全局url
+        const originalUrl = new URL("https://chatserve.polar-bear.eu.org/api/");   
+    </script>
+
+
+    <style>
+        /* 将CSS规则定义在外部样式表中 */
+        /* 为所有设备设置基础样式 */
+        body {
+        background-color: rgb(241, 147, 156);
+        }
+
+        #container {
+        width: 100vw; /* 容器宽度基于视口宽度 */
+        margin: auto;
+        }
+
+        #header {
+        background-color: #fcc515;
+        width:100vw;
+        }
+
+        #header h1 {
+        margin-bottom: 0;
+        }
+
+        #menu-list {
+            float: left;/* 移动到其父元素或包含块的左边缘，并且其他文本和内联元素会围绕它流动 */
+            display: flex; /* 设置flexbox布局 */
+            flex-direction: column; /* 子元素沿着垂直方向排布 */
+        }
+            #menu {
+            background-color: #ffe77c;
+            height:70vh; /* 菜单宽度基于视口宽度 */
+            width:15vw;
+            overflow-y: auto; /* 垂直方向滚动 */
+            }
+            #Add-button {
+            background-color: #fce373;
+            height:10vh; /* 菜单宽度基于视口宽度 */
+            width:15vw;
+            }
+
+        #content {
+        background-color: #EEEEEE;
+        float: left;
+        height:80vh;
+        width:85vw;/* 内容区域宽度基于视口宽度 */
+        }
+
+        #footer {
+        background-color: #fff2cb;
+        text-align: center;
+        clear:both;
+        width:100%;
+        }
+
+        /* 控制容器窗口占比 */
+        #iframe-container {
+            width: 100%;
+            height: 100%;
+        }
+
+
+        /* 群组选择按钮样式 */
+        /* .开头为类选择器 */
+        .group-button {
+            padding: 10px;
+            width: 75%;
+            margin: 5px auto;/* 上下间距5px，左右自动（居中） */
+            background-color: #ebff7c;/* 默认背景色 */
+            border-radius: 15px;/* 圆角半径 */
+            text-align: center;/* 文本居中 */
+            cursor: pointer;/* 鼠标悬停时为手指指针形状 */
+            font-size: 12px;  /* 字体大小 */
+            font-weight: bold;/* 字体加粗 */
+            color: #000000;  /* 字体颜色 */
+            border: 1px solid #6d6d6d; /* 边缘线色 */
+            
+            transition: background-color 0.3s, border-color 0.3s; /* 当背景色、边框、大小发生变化，变化在0.3秒内平滑过渡完成 */
+            /* 其他想要添加的样式 */
+            background: linear-gradient(to right, #e9ff6f, #74ff7c); /* 设定一个从右到左，由#ebff7c渐变为#74ff7c的背景渐变。 */
+            background-size: 200% 200%; /* 把渐变尺寸设置得比容器大，以便渐变可以移动 */
+            animation: gradient 5s linear infinite; /* 应用一个无限循环，每次循环5秒的名为gradient的动画。 */
+        }
+        /* 鼠标悬停在按钮上时的样式 */
+        .group-button:hover {
+            background-color: #ffff64;  /* 鼠标悬停状态下的背景色 */
+            border-color: #a2a2a2;     /* 鼠标悬停状态下边框颜色 */
+            transform: scale(1.01); /* 鼠标悬停时放大按钮为原大小的1.01倍 */
+        }
+
+        /* 背景色的动画 */
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;  /* 渐变起点从左边开始 */
+            }
+            50% {
+                background-position: 100% 50%; /* 渐变移动到右边 */
+            }
+            100% {
+                background-position: 0% 50%;  /* 渐变回到左边，形成一个循环 */
+            }
+        }
+
+
+
+
+
+        /* 提示窗口的基本样式 */
+        .custom-alert {
+            display: none; /* 默认不显示 */
+            position: fixed; /* 固定位置显示 */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000; /* 确保在最上层 */
+            background-color: #f4f4f4; /* 背景色 */
+            padding: 20px;
+            border-radius: 5px; /* 圆角边框 */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25); /* 阴影效果 */
+        }
+
+        /* 提示内容的样式 */
+        .custom-alert-content {
+            text-align: center;
+        }
+
+        /* 提示信息文字的样式 */
+        .custom-alert-message {
+            margin-bottom: 20px;
+        }
+
+        /* 关闭按钮的样式 */
+        .close-btn {
+            padding: 5px 10px;
+            background-color: #ff4040; /* 按钮背景色 */
+            color: white; /* 按钮文字颜色 */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        
+
+
+
+
+        /* 遮罩层样式 */
+        .modal {
+        display: none; /* 默认不显示 */
+        position: fixed; /* 固定位置显示 */
+        z-index: 1; /* z-index设置得高于页面上的其他元素 */
+        left: 0;
+        top: 0;
+        width: 100%; /* 宽度和高度全屏 */
+        height: 100%; 
+        overflow: auto; /* 如果需要滚动 */
+        background-color: rgba(0,0,0,0.4); /* 背景色但有透明度 */
+        }
+
+        /* 弹出窗口样式 */
+        .modal-content {
+        margin: 15% auto; /* 15% 从顶部和居中显示 */
+        border: 1px solid #888;
+        width: 80%; /* 可设置所需宽度 */
+        z-index: 2; /* z-index设置得高于遮罩层 */
+        background-color: #f4f4f4; /* 背景色 */
+        padding: 20px;
+        border-radius: 15px; /* 圆角边框 */
+        box-shadow: 20px 30px 6px 12px rgba(0, 0, 0, 0.25); /* 阴影效果 */
+        }
+
+        /* 关闭按钮样式 */
+        .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+        }
+
+        /* 抖动动画 */
+        @keyframes shake {
+        0%, 100% { transform: translateY(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateY(-5px); }
+        20%, 40%, 60%, 80% { transform: translateY(5px); }
+        }
+
+        .shake {
+        animation: shake 0.7s;
+        animation-iteration-count: 1;
+        }
+
+
+        /* 查找群聊输入框的样式 */
+        .message-textarea {
+        width: calc(80% - 44px); /* calc() 函数来计算输入框实际的宽度 */
+        padding: 20px;
+        margin-right: 2%; /* 为发送按钮留出间隙 */
+        border: 1px solid #ccc;
+        border-radius: 15px; /* 圆角大小 */
+        border-radius: 15px; /* 圆角大小 */
+        font-size: 25px; /* 字体大小 */
+
+        overflow-y: auto; /* 超出时允许纵向滚动 */
+        word-wrap: break-word; /* 允许单词内断行 */
+        resize: none;/* 禁止用户调整大小 */
+
+        max-width: calc(80% - 44px); /* 最大宽度，用来换行 */
+        word-wrap: break-word; /* 保证长单词换行 */
+        overflow-wrap: break-word; /* 同上，保证长单词在边界处换行 */
+        }
+
+        /* 按钮的样式 */
+        .search-button {
+        width: 10%;
+        padding: 20px;
+        border: none;
+        border-radius: 15px; /* 圆角大小 */
+        background: #007bff; /* 按钮颜色 */
+        color: white; /* 文本颜色 */
+        }
+
+        /* 搜索群聊结果显示样式 */
+        .result-item {
+            border: 1px solid #ccc;
+            padding: 8px;
+            margin-bottom: 10px; 
+            cursor: pointer;
+            border-radius: 8px; /* 这里设置了容器的圆角 */
+            background-color: #f9f9f9; /* 这里设置了容器的背景色 */
+            display: flex; /* 定义为flex容器 */
+            align-items: center;
+            justify-content: space-between; /* 左右两端对齐，项目之间的间隔都相等 */
+            
+        }
+
+        .group-name, .group-id, .group-timestamp {
+            margin-bottom: 5px;
+        }
+
+        /* 添加群聊按钮的样式 */
+        .add-group-button {
+            width: 15%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px; /* 圆角大小 */
+            background: #007bff; /* 按钮颜色 */
+            color: white; /* 文本颜色 */
+        }
+
+
+        /* 高亮显示样式 */
+        .highlight {
+            background-color: yellow; /* 高亮颜色 */
+            color: black; /* 文字颜色，如果需要的话 */
+        }
+
+
+    </style>
+
+    <script>
+        // 显示自定义提示窗口的函数
+        function showCustomAlert(message, duration) {
+            var alertBox = document.getElementById('customAlert');
+            var alertMessage = alertBox.querySelector('.custom-alert-message');
+            
+            alertMessage.innerHTML = message; // 设置提示信息的内容 
+            
+            if(alertBox.style.display === 'none' || !alertBox.style.display) {
+                alertBox.style.display = 'block'; // 显示提示窗口
+            }
+
+            // 如果指定了时间，则设置定时器，时间到后关闭提示窗口
+            if(duration) {
+                setTimeout(function() {
+                    alertBox.style.display = 'none';
+                }, duration);
+            }
+        }
+        // 关闭自定义提示窗口的函数
+        function closeCustomAlert() {
+            var alertBox = document.getElementById('customAlert');
+            // 检查提示窗口是否正在显示中
+            if(alertBox.style.display === 'block') {
+                // 如果正在显示中，设置display为'none'来隐藏它
+                alertBox.style.display = 'none';
+            } else {
+                // 如果提示窗口已经被隐藏，可以在这里添加任何你需要处理的逻辑
+                console.log("提醒窗口已隐藏");
+            }
+        }
+
         function showmessage(message){
-            alert(message);
+            showCustomAlert(message); // 显示提示信息3秒后自动关闭
         }
     </script>
+
+
+
+
     <script>
+
+        async function get_group(userid,token,type,group_search_term = null, group_id = null) {
+
+            // 创建请求头
+            var myHeaders = new Headers();
+            myHeaders.append("Accept", "*/*");
+
+            // 创建一个新的URL对象，作为原始URL的副本
+            const url = new URL(originalUrl);
+
+            if (type == "search_group") {
+                // 为请求url后面添加参数
+                url.searchParams.append("type", "search_group");
+                // 创建请求体
+                var raw = JSON.stringify({
+                    "userid": userid,
+                    "token": token,
+                    "group_search_term": group_search_term
+                });
+            }
+            else if (type == "get_group"){
+                // 为请求url后面添加参数
+                url.searchParams.append("type", "get_group");
+                // 创建请求体
+                var raw = JSON.stringify({
+                    "userid": userid,
+                    "token": token
+                });
+            }
+            else if (type == "apply_for"){
+                // 为请求url后面添加参数
+                url.searchParams.append("type", "apply_for");
+                // 创建请求体
+                var raw = JSON.stringify({
+                    "userid": userid,
+                    "token": token,
+                    "group_id": group_id
+                });
+            }
+
+
+
+
+
+
+
+            // 创建请求选项
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+
+
+
+            try {
+                // 使用 await 等待 fetch 请求并获取响应
+                const response = await fetch(url, requestOptions);
+                if (!response.ok) {
+                    // 如果响应状态码不是2xx，获取错误文本
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+                // 如果响应状态码是2xx，解析JSON
+                const data = await response.json();
+
+                // 这里就会接收JSON对象
+                contents = data; // 把解析后的数据赋值给全局变量
+                return contents;
+            } catch (error) {
+                // 处理所有的错误情况（包括网络错误或由 throw new Error(text) 触发的错误）
+                showmessage('发生错误：' + error.message);
+                console.error('Error:', error);
+                return null;
+            }
+        }
+
+
         // 该函数会在页面加载完毕后立即执行，并且每隔1000毫秒（1秒）更新一次时间。
         window.onload = function() {
         setInterval(displayDate, 1000);
@@ -19,29 +404,220 @@
         document.getElementById("demo").innerHTML = new Date().toLocaleTimeString();
         }
     </script>
+
+
+
+    <script>
+
+        // 加群函数，用于处理用户点击加群
+        async function joinGroup(groupId) {
+            // 在这里添加调用API或其他逻辑以处理加入群聊的操作
+            try {
+                // 等待get_group的解决并获取结果
+                var groupSearchResults = await get_group(userid, token,"apply_for",null,groupId);
+                if(groupSearchResults != null){
+                    showmessage("申请加群成功");
+                }
+            } catch (response) {
+                // 这里捕获到的可能是一个响应对象，而不是实际的错误
+                if (response instanceof Response) {
+                    const errorText = await response.text(); // 获取文本形式的错误信息
+                    console.error('申请加群失败：' + errorText);
+                } else {
+                    // 这里处理其他类型的错误，例如网络问题或代码错误
+                    console.error("Error", response);
+                }
+            }
+        }
+        async function searchGroup() {
+            // 获取搜索词
+            var searchTerm = document.getElementById("groupSearchInput").value;
+            // 检查搜索词是否为空
+            if (!searchTerm.trim()) {
+                showmessage("搜索词不能为空");
+                return;
+            } else {
+                    
+                
+                // 假设这里有一个请求到服务器搜索群聊的逻辑
+                // 或者你可以使用本地数据进行搜索
+                // 此处以搜索结果为例只有一个群聊对象的数组
+
+                try {
+                    // 等待get_group的解决并获取结果
+                    var groupSearchResults = await get_group(userid, token,"search_group",searchTerm);
+                } catch (error) {
+                    // 处理错误情况
+                    console.error("Error getting group information:", error);
+                    var groupSearchResults = {}
+                }
+            
+
+                // 获取展示搜索结果的容器
+                var searchResultsContainer = document.getElementById('searchResults');
+
+                // 清空容器内的内容
+                searchResultsContainer.innerHTML = '';
+
+                // 遍历搜索结果并创建 DOM 元素
+                groupSearchResults.forEach(function(group) {
+                    // 创建包含单个搜索结果的容器
+                    var resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+
+                    // 创建包含文字部分的容器
+                    var textContainer = document.createElement('div');
+                    textContainer.className = 'text-container';
+
+                    // 创建和添加群名称元素
+                    var groupNameDiv = document.createElement('div');
+                    groupNameDiv.className = 'group-name';
+                    groupNameDiv.textContent = '群名称: ' + group.group_name;
+                    
+                    // 创建和添加群 ID 元素
+                    var groupIdDiv = document.createElement('div');
+                    groupIdDiv.className = 'group-id';
+                    groupIdDiv.textContent = '群 ID: ' + group.group_id;
+
+                    // 创建和添加时间元素
+                    var groupTimestampDiv = document.createElement('div');
+                    groupTimestampDiv.className = 'group-timestamp';
+                    groupTimestampDiv.textContent = '创建时间: ' + group.timestamp;
+
+
+                    // 创建加群按钮元素
+                    var joinButton = document.createElement('button');
+                    joinButton.innerText = "加入群聊";
+                    joinButton.className = 'add-group-button';
+                    // 直接设置 onclick 属性
+                    joinButton.setAttribute('onclick', 'joinGroup("' + group.group_id + '")');
+
+
+
+                    // 把所有信息加入到文字部分的容器中
+                    textContainer.appendChild(groupNameDiv);
+                    textContainer.appendChild(groupIdDiv);
+                    textContainer.appendChild(groupTimestampDiv);
+
+                    // 把文字部分的容器加入到搜索结果项中
+                    resultItem.appendChild(textContainer);
+
+                    // 把加群按钮加入到搜索结果项中
+                    resultItem.appendChild(joinButton);
+
+                    // 将该搜索结果项加入到搜索结果容器中
+                    searchResultsContainer.appendChild(resultItem);
+                });
+
+
+
+                //  searchTerm 是搜索词
+
+                // 假设 searchResults 包含搜索结果文本内容的变量
+                var searchResults = document.querySelectorAll('.result-item .group-name, .result-item .group-id, .result-item .group-timestamp');
+
+                searchResults.forEach(function(item) {
+                    // 转义特殊字符以避免在搜索词中创建无效的正则表达式
+                    var escapedSearchTerm = searchTerm.replace(/[-/\^$*+?.()|[]{}]/g, '\$&');
+                    
+                    // 创建用于匹配搜索词的正则表达式，'gi'代表全局匹配且不区分大小写
+                    var searchRegExp = new RegExp('(' + escapedSearchTerm + ')', 'gi');
+
+                    // 高亮匹配的文本
+                    item.innerHTML = item.innerHTML.replace(searchRegExp, '<span class="highlight">$1</span>');
+                });
+
+
+
+
+            }
+        }
+
+
+    </script>
+
+    
+
 </head>
-<body style="background-color:rgb(241, 147, 156);"></body>
+
+
+
+
+
+
+<!-- 页面主体 -->
 <body>
-    <div id="container" style="width:1300px">
- 
-        <div id="header" style="background-color:#FFA500;">
-        <h1 style="margin-bottom:0;">chat_web</h1></div>
-         
-        <div id="menu" style="background-color:#FFD700;height:600px;width:100px;float:left;">
-        <b>chat</b>
+
+
+    <!-- 提示窗口 -->
+    <div id="customAlert" class="custom-alert">
+        <div class="custom-alert-content">
+            <span class="custom-alert-message">这是一条提示信息！</span>
+            <button class="close-btn" onclick="closeCustomAlert()">关闭</button>
         </div>
+    </div>
+    
+
+
+
+    <!-- 添加群聊界面 -->
+    
+    <div id="add_group" class="modal" style="display: none;">
+        <!-- 弹出窗口的内容 -->
+        <div class="modal-content">
+        <span class="close">&times;</span>
+            <p>搜索群聊：</p>
+            <!-- 搜索栏 -->
+            <input type="text" class="message-textarea" id="groupSearchInput" placeholder="输入群聊名称...">
+            <!-- 搜索按钮 -->
+            <button class="search-button" onclick="searchGroup()">搜索</button>
+            <div id="searchResults"></div>
+
+        </div>
+    </div>
+
+
+    <!-- 处理群内信息界面 -->
+    <div id="group_info" class="modal" style="display: none;">
+        <!-- 弹出窗口的内容 -->
+        <div class="modal-content">
+        <span class="close">&times;</span>
+            <p>申请消息处理：</p>
+            <button class="search-button" onclick="searchGroup()">刷新</button>
+            <div id="group_info_list" ></div>
+
+
+        </div>
+    </div>
+
+
+    <!-- 基础界面 -->
+    <div id="container"> 
+ 
+        <div id="header" >
+        <h1>chat_web</h1></div>
          
-        <div id="content" style="background-color:#EEEEEE;height:600px;width:1200px;float:left;">
-            <!-- 添加ID以便可以通过JavaScript引用 -->
+        <!-- menu侧边栏 -->
+        <div id="menu-list">
+            <div id="menu"></div>
+            <div id="Add-button" style="display: flex;align-items: center;justify-content: center;">
+                <button class="group-button" style="padding: 10px;width: 30%;" onclick="show_group_info()">处理</button>
+                <button class="group-button" style="padding: 10px;width: 30%;" onclick="show_search_group()">加群</button>
+            </div>
+        </div>
+        
+
+        <div id="content">
             <div id="iframe-container"></div>
         </div>
-         
-        <div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+        
+        <div id="footer">
             <p id="demo"></p>
         </div>
          
     </div>
    
+
     <script>
         // 创建一个URLSearchParams对象，传入当前页面URL的查询字符串
         const queryParams = new URLSearchParams(window.location.search);
@@ -50,25 +626,125 @@
         const token = queryParams.get('token');
 
 
-        // 创建iframe的src属性
-        var iframeSrc = `/message/?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(userid)}`;
 
-        // 获取容器元素的引用
-        var container = document.getElementById('iframe-container');
-
-    
-          
+        // 群组容器
+        function get_menu(contents) {            
+            // 获取容器元素的引用
+            var container = document.getElementById('iframe-container');
             
+            //聊天栏容器
+            function updateIframe(group_id) {
+                // 创建iframe的src属性
+                var iframeSrc = `/message/?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(userid)}&group_id=${encodeURIComponent(group_id)}`;
+                
+                // 如果已经存在iframe，则移除
+                if (container.querySelector('iframe')) {
+                    container.removeChild(container.querySelector('iframe'));
+                }
+                
+                // 创建一个新的iframe元素
+                var iframe = document.createElement('iframe');
+                iframe.src = iframeSrc;
+                iframe.style.width = '100%'; // 可以设置宽度
+                iframe.style.height = '100%'; // 可以设置高度
+                
+                // 将iframe元素添加到容器中
+                container.appendChild(iframe);
+            }
+            
+            // 更新初始的iframe
+            updateIframe("1");
+            
+            // 获取menu元素
+            var menu = document.getElementById("menu");
+            // 遍历contents数组，为每个内容创建一个按钮
+            contents.forEach(function(content) {
+                // 创建新的div元素作为按钮
+                var newDiv = document.createElement("div");
+                newDiv.classList.add("group-button");  // 添加类
+                
+                newDiv.innerText = content.group_name; // 设置按钮文本为群组名称
+                
+                
+                // 为按钮添加点击事件监听器
+                newDiv.addEventListener('click', function() {
+                    updateIframe(content.group_id);
+                });
+                
+                // 将新的div按钮添加到menu中
+                menu.appendChild(newDiv);
+            });
+        }
 
-    
-  
-        // 创建一个新的iframe元素
-        var iframe = document.createElement('iframe');
-        iframe.src = iframeSrc;
-        iframe.style.width = '1200px'; // 可以设置宽度
-        iframe.style.height = '600px'; // 可以设置高度
-        // 将iframe元素添加到容器中
-        container.appendChild(iframe);
+
+
+
+
+        // 定义一个异步函数用于执行整个操作
+        async function initializeMenu() {
+        try {
+            // 等待get_group的解决并获取结果
+            var contents = await get_group(userid, token,"get_group");
+            // 现在contents就是群组信息数组
+            get_menu(contents);
+        } catch (error) {
+            // 处理错误情况
+            console.error("Error getting group information:", error);
+        }
+        }
+
+        // 调用初始化异步函数
+        initializeMenu();
+
     </script>
+
+
+
+    <!-- 显示模态窗口 -->
+    <script>
+        // 获取模态窗口元素
+        var group_info = document.getElementById("group_info");
+        var add_group = document.getElementById("add_group");
+
+
+        // 全局变量，用来引用当前显示的模态窗口
+        var currentModal = null;
+
+        // 显示加群窗口
+        function show_search_group() {
+            add_group.style.display = "block";
+            currentModal = add_group;
+        }
+        //显示处理窗口
+        function show_group_info() {
+            group_info.style.display = "block";
+            currentModal = group_info;
+        }
+
+
+
+        // 获取所有关闭按钮元素并为它们添加事件
+        var closeButtons = document.getElementsByClassName("close");
+        for (var i = 0; i < closeButtons.length; i++) {
+            closeButtons[i].onclick = function() {
+                currentModal.style.display = "none";
+            }
+        }
+
+
+        // 点击窗口外的区域抖动窗口
+        window.onclick = function(event) {
+            if (event.target == currentModal) {
+                var modalContent = currentModal.querySelector('.modal-content'); // 获取当前活动模态框的'.modal-content'
+                modalContent.classList.add('shake'); // 抖动当前活动的模态框
+                setTimeout(function() {
+                    modalContent.classList.remove('shake');
+                }, 500); // 500毫秒后移除抖动效果
+            }
+        }
+
+
+    </script>
+    
 </body>
 </html>
