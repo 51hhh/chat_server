@@ -13,6 +13,7 @@ import re
 import os
 from supabase import create_client, Client
 
+
 # 从环境变量获取这些值
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
@@ -21,8 +22,8 @@ key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 # 全局缓存，存储最近的消息数据
-MESSAGES_CACHE = []
-USERS_INFO = []
+MESSAGES_CACHE = {}
+USERS_INFO = {} 
 GROUP_MEMBERS = []
 GROUPS_INFO = []
 class handler(BaseHTTPRequestHandler):
@@ -120,21 +121,16 @@ class handler(BaseHTTPRequestHandler):
 # 获取users库内容缓存至USERS_INFO
 def get_user_info(self,user_id):
     global USERS_INFO
-    if USERS_INFO == []:
+    if not USERS_INFO:
         try:
             history_user_info = supabase.table("users").select("*").execute()
         except:
-            self._send_error_response("网络错误，连接数据库失败" ,status_code=404)
-            a_user_info = {}
-            return a_user_info
+            self._send_error_response("网络错误，连接数据库失败", status_code=404)
+            return None
         # 本地缓存
-        USERS_INFO = history_user_info.data
-        a_user_info = [message for message in USERS_INFO if message['userid'] == user_id]
-        return a_user_info
-    else:
-        # 从缓存中获取信息
-        a_user_info = [message for message in USERS_INFO if message['userid'] == user_id]
-        return a_user_info
+        USERS_INFO = {user['userid']: user for user in history_user_info.data}  # 存储为字典
+    return USERS_INFO.get(user_id)  # 使用 get 方法安全地获取用户信息
+
 
 def get_group_members(self,user_id,group_id=None):
     global GROUP_MEMBERS
@@ -342,7 +338,7 @@ def sign_in(self,post_data_json):
             
             # 用户登录，清除本地用户缓存USERS_INFO以确保token被真确加载
             global USERS_INFO
-            USERS_INFO = []
+            USERS_INFO = {}  # 清空缓存
             
             # 查询 token
             token = user_info.data[0]["token"]
@@ -431,7 +427,8 @@ def message(self,post_data_json):
     
     # 清除本地消息缓存
     global MESSAGES_CACHE
-    MESSAGES_CACHE = []
+    if group_id in MESSAGES_CACHE:  # 只清除对应 group_id 的缓存
+        del MESSAGES_CACHE[group_id]
 
     # 如果保存成功，发送成功响应
     data = {
@@ -445,7 +442,7 @@ def message(self,post_data_json):
 
 
 
-
+# 获取消息
 def get_message(self,post_data_json):
     print(f"Received POST request for {self.path}")
     
@@ -478,27 +475,24 @@ def get_message(self,post_data_json):
             self._send_error_response(f"{user_id}的用户不在{group_id}群内" ,status_code=400)
             return 
     
-
     # 如果有缓存
     global MESSAGES_CACHE
-    if MESSAGES_CACHE == []:
-        try:
-            chat_history_response = supabase.table("messages").select("*").execute()
-        except:
-            self._send_error_response("网络错误" ,status_code=404)
-            return
-        # 本地缓存
-        MESSAGES_CACHE = chat_history_response.data
+    if group_id in MESSAGES_CACHE:  # 检查 group_id 是否在缓存中
+        messages_in_group = MESSAGES_CACHE[group_id]  # 从缓存中获取消息
     else:
-        # 从缓存中获取信息
-        MESSAGES_CACHE = MESSAGES_CACHE
+        try:
+            chat_history_response = supabase.table("messages").select("*").eq("group_id", group_id).execute()  # 只查询对应 group_id 的消息
+        except:
+            self._send_error_response("网络错误", status_code=404)
+            return
+        messages_in_group = chat_history_response.data
+        MESSAGES_CACHE[group_id] = messages_in_group  # 更新缓存
 
-    messages_in_group = [message for message in MESSAGES_CACHE if message['group_id'] == group_id]
     self._send_success_response(messages_in_group, status_code=200)
 
 
        
-
+# 申请加群
 def apply_for(self,post_data_json):
     # 尝试解析json中的userid和token
     try:
