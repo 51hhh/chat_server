@@ -1,31 +1,13 @@
 # -*- coding: UTF-8 -*-
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from datetime import datetime
 import json
 from urllib.parse import urlparse, parse_qs
-import secrets
-import supabase
-import re
 
 # 导入
 from operation.operation import *
-# 数据库部分
-
-import os
-from supabase import create_client, Client
-
-# 从环境变量获取这些值
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
 
 
-supabase: Client = create_client(url, key)
 
-# 全局缓存，存储最近的消息数据
-MESSAGES_CACHE = []
-USERS_INFO = []
-GROUP_MEMBERS = []
-GROUPS_INFO = []
 class handler(BaseHTTPRequestHandler):
 
     """

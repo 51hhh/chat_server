@@ -1,8 +1,5 @@
 # -*- coding: UTF-8 -*-
-from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
-import json
-from urllib.parse import urlparse, parse_qs
 import secrets
 import supabase
 import re
@@ -13,7 +10,24 @@ import re
 import os
 from supabase import create_client, Client
 
+# 全局缓存，存储最近的消息数据
+MESSAGES_CACHE = []
+USERS_INFO = []
+GROUP_MEMBERS = []
+GROUPS_INFO = []
 
+
+# 从环境变量获取这些值
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+
+
+
+
+# 初始化
+supabase: Client
+def init():
+    supabase: Client = create_client(url, key)
 
 
 # 获取users库内容缓存至USERS_INFO
