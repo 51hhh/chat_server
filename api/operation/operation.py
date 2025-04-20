@@ -19,15 +19,15 @@ GROUPS_INFO = []
 
 # 从环境变量获取这些值
 url: str = os.environ.get("SUPABASE_URL")
+
 key: str = os.environ.get("SUPABASE_KEY")
 
 
 
 
 # 初始化
-supabase: Client
-def init():
-    supabase: Client = create_client(url, key)
+
+supabase: Client = create_client(url, key)
 
 
 # 获取users库内容缓存至USERS_INFO
