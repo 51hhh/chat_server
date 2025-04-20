@@ -3,7 +3,17 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 from urllib.parse import urlparse, parse_qs
 
-# 导入
+
+import sys
+import os
+# 获取 api/index.py 所在的目录
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# 获取 my_project 目录
+project_dir = os.path.dirname(current_dir)
+# 将 modules 目录添加到 Python 模块搜索路径
+modules_dir = os.path.join(project_dir, 'modules')
+sys.path.append(modules_dir)
+
 from operation import *
 
 

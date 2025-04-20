@@ -23,7 +23,6 @@ key: str = os.environ.get("SUPABASE_KEY")
 
 
 
-
 # 初始化
 
 supabase: Client = create_client(url, key)
