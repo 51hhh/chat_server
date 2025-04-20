@@ -19,7 +19,6 @@ GROUPS_INFO = []
 
 # 从环境变量获取这些值
 url: str = os.environ.get("SUPABASE_URL")
-
 key: str = os.environ.get("SUPABASE_KEY")
 
 
