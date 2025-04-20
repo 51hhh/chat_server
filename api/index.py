@@ -4,7 +4,7 @@ import json
 from urllib.parse import urlparse, parse_qs
 
 # 导入
-from operation.operation import *
+from operation import *
 
 
 
