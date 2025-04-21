@@ -22,14 +22,6 @@ class handler(BaseHTTPRequestHandler):
 
     """
     处理POST请求。
-
-    记录请求信息。
-    获取并解析请求数据。
-    检查请求数据中是否包含'userid'和'message'。
-    从请求数据中提取'userid'和'message'。
-    将用户ID、消息和时间戳存储到聊天历史记录中。
-    发送状态码为200的响应，并设置响应头部为纯文本格式。
-    向响应正文写入确认消息。
     """
     def do_POST(self):
         path = self.path#获取请求路径

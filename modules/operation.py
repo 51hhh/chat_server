@@ -3,6 +3,10 @@ from datetime import datetime
 import secrets
 import supabase
 import re
+import schedule
+import time
+import threading
+import bcrypt
 
 
 # 数据库部分
@@ -18,8 +22,11 @@ GROUPS_INFO = []
 
 
 # 从环境变量获取这些值
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+# url: str = os.environ.get("SUPABASE_URL")
+# key: str = os.environ.get("SUPABASE_KEY")
+
+key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZmpwaG9vaGdoYm1seWV1dHl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyNzcwMDMsImV4cCI6MjA1OTg1MzAwM30.DVyVeTi72Mf6jo1Exf-0UqE18wtzeULM4wI_BT0g9nU"
+url="https://jmfjphoohghbmlyeutyv.supabase.co"
 
 
 
@@ -28,12 +35,26 @@ key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 
+# hash 加密
+def hash_password(password):
+    salt = bcrypt.gensalt()# 生成盐
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    # 例如$2b$12$QrVsHdYJjy835zXLOg71iuZT8JOSqtUHqe.Ghwhuc7aCqTqYGHuqK
+    # 2b 表示 bcrypt 版本，12是工作因子，QrVsHdYJjy835zXLOg71iu 是盐值，ZT8JOSqtUHqe.Ghwhuc7aCqTqYGHuqK 是hash值
+    return hashed_password.decode('utf-8')
+
+# 对比密码hash
+def verify_password(input_password, stored_password):
+    return bcrypt.checkpw(input_password.encode('utf-8'), stored_password.encode('utf-8'))
+
+
+
 # 获取users库内容缓存至USERS_INFO
 def get_user_info(self,user_id):
     global USERS_INFO
     if USERS_INFO == []:
         try:
-            history_user_info = supabase.table("users").select("*").execute()
+            history_user_info = supabase.table("users").select("*").execute() #查询用户信息
         except:
             self._send_error_response("网络错误，连接数据库失败" ,status_code=404)
             a_user_info = {}
@@ -46,6 +67,7 @@ def get_user_info(self,user_id):
         # 从缓存中获取信息
         a_user_info = [message for message in USERS_INFO if message['userid'] == user_id]
         return a_user_info
+
 
 def get_group_members(self,user_id,group_id=None):
     global GROUP_MEMBERS
@@ -125,28 +147,13 @@ def check_user_token(self,post_data_json):
         self._send_error_response(f"没有找到{user_id_value}的用户" ,status_code=400)
         return False
 
+
+
+
+
 """
 使用给定的查询参数注册用户。
-作用:
-    在服务器上注册新用户。
-
-参数:
-    self: 
-    query_params (dict): 包含查询参数的字典。
-
-返回:
-    None
-
-异常:
-    None
-
-异常处理:
-    无 userid
-    无 password
-    用户已存在
 """
-
-
 
 def sign_up(self,post_data_json):     
     # 尝试解析json中的userid和token
@@ -183,13 +190,13 @@ def sign_up(self,post_data_json):
         self._send_error_response(f"{user_id_value}已存在" ,status_code=400)
 
     else:
-        new_user = {"userid": user_id_value, "password": password_value}
+        new_user = {"userid": user_id_value, "password": hash_password(password_value)}
         # 在数据库中创建新用户
         try:
             supabase.table("users").insert(new_user).execute()
         
-        except:
-            self._send_error_response("网络错误" ,status_code=404)
+        except Exception as e:
+            self._send_error_response(f"网络错误:{e}" ,status_code=404)
             return
         
         
@@ -212,9 +219,6 @@ def sign_up(self,post_data_json):
 
 参数:
     query_params (dict): 包含查询参数的字典。
-
-返回:
-    None
 """
 
 
@@ -249,7 +253,7 @@ def sign_in(self,post_data_json):
     if user_info.data:
         user_info_data = user_info.data[0]
         # 对比密码
-        if user_info_data["password"] == password_value:
+        if verify_password(password_value,user_info_data["password"]):
             
             # 用户登录，清除本地用户缓存USERS_INFO以确保token被真确加载
             global USERS_INFO
@@ -723,3 +727,21 @@ def search_group(self,post_data_json):
 
 
     
+
+# 定时任务保活
+def read_database():
+    try:
+        supabase.table("users").select("*").execute()
+    except:
+        print("00:00数据库连接错误")
+        return
+    print("00:00数据库连接成功")
+
+def schedule_task():
+    schedule.every().day.at("00:00").do(read_database)  # 每天凌晨0点执行
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+thread = threading.Thread(target=schedule_task)
+thread.start()
